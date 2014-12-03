@@ -12,10 +12,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-uint8_t conversion (uint8_t _ADC) //ADC 8-bit, Vref 3.3V;
-
-
-
-#endif /* PROXIMITY_H_ */
 uint8_t conversion( uint8_t ); /*ADC 8-bit, Vref 3.3V */
 uint8_t LinearAPPROX( uint8_t );
+
+#endif /* PROXIMITY_H_ */

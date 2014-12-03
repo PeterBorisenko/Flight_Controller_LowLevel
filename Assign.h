@@ -16,15 +16,15 @@
 #define PSC_0_8     0b010
 #define PSC_0_64    0b011
 #define PSC_0_256   0b100
-#define PSC_0_1024  0x101
-#define EXT_0_FALLING     0x110
-#define EXT_0_RISING      0x111
+#define PSC_0_1024  0b101
+#define EXT_0_FALLING     0b110
+#define EXT_0_RISING      0b111
 #define PSC_2_8     0b010
 #define PSC_2_32    0b011
 #define PSC_2_64   0b100
-#define PSC_2_128  0x101
-#define PSC_2_256     0x110
-#define PSC_2_1024      0x111
+#define PSC_2_128  0b101
+#define PSC_2_256     0b110
+#define PSC_2_1024      0b111
 // Motor (ESC) Control Pins/Ports
     // Needed Software PWM !
 

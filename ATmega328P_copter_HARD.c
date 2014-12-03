@@ -4,7 +4,7 @@
  * Created: 4/18/2014 8:05:30 PM
  *  Author: Disgust
  */ 
-
+ #define F_CPU 16000000UL
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <stdint.h>
 //#include <tgmath.h> // test
-#include <avr/delay.h>
+#include <util/delay.h>
 
 #include "Macro.h"
 #include "Proximity.h"
@@ -75,7 +75,7 @@ void prepareESC()
 	ESC_dir|= (1 << FL_pin)|(1 << FR_pin)|(1 << BL_pin)|(1 << BR_pin); // ESC control pins are OUTs
 }
 
-inline volatile void setThrust(unsigned char * ESC_reg, uint8_t thrust) {
+inline void setThrust(unsigned char * ESC_reg, uint8_t thrust) {
     *ESC_reg= thrust;
 }
 
@@ -86,6 +86,7 @@ void getCurrentImuData() {
 void prepareSystem() 
 {
     WDTCSR|= (1 << WDE)|(1 << WDIE);
+    //WDTCSR|=(0b111 << WDP0);
 	setPowerReduction();
 }
 
@@ -93,15 +94,15 @@ void test()
 {
 	FL_reg= 0x01;
     FR_reg= 0x0F;
-    BR_reg= 0x7F;
-    BL_reg= 0xFF;
+    BL_reg= 0x1F;
+    BR_reg= 0xFF;
 }
 
 int main(void)
 {
     prepareSystem();
-    prepareTimer(0,0, PSC_0_8);
-    prepareTimer(2,0, PSC_2_8);
+    prepareTimer(0,0, PSC_0_64);
+    prepareTimer(2,0, PSC_2_64);
     
     prepareI2C();
     prepareUSART();
@@ -110,11 +111,11 @@ int main(void)
 
     sei();
 
+    test();
+
     while(1)
     {
         asm("wdr");
-        test();
-        _delay_ms(1);
     }
 }
 

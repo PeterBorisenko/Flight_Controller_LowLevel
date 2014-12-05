@@ -57,6 +57,12 @@ volatile static vect_t prev_vect_Y;
 volatile static vect_t prev_vect_Z;
 
 
+// Store thrust
+uint8_t FL= 0;
+uint8_t FR= 0;
+uint8_t BL= 0;
+uint8_t BR= 0;
+
 void setPowerReduction() {
     PRR|= (1 << PRTIM1)|(1 << PRSPI)|(1 << PRADC);
 }
@@ -165,9 +171,54 @@ volatile void calculate()
 }
 
 void makeDecision() {
-    (norm_vect_X>required_vect_X)?(/*fl++fr++bl--br--*/):((norm_vect_X<required_vect_X)?(/*fl--fr--br++bl++*/):(/*notchange*/));
-    (norm_vect_Y>required_vect_Y)?(/*fr++br++fl--bl--*/):((norm_vect_Y<required_vect_Y)?(/*fl--fr--bl++br++*/):(/*notchange*/));
-    (norm_vect_Z>required_vect_Z)?(/*fl--fr--br--bl--*/):((norm_vect_Z<required_vect_Z)?(/*fl++fr++bl++br++*/):(/*notchange*/));
+    (norm_vect_X>required_vect_X)?( /*fl++fr++bl--br--*/
+        setThrust(FL_reg, CONSTRAIN(++FL, 0, 255));
+        setThrust(FR_reg, CONSTRAIN(++FR, 0, 255));
+        setThrust(BR_reg, CONSTRAIN(--BR, 0, 255));
+        setThrust(BL_reg, CONSTRAIN(--BL, 0, 255));
+    ):((norm_vect_X<required_vect_X)?( /*fl--fr--br++bl++*/
+        setThrust(FL_reg, CONSTRAIN(--FL, 0, 255));
+        setThrust(FR_reg, CONSTRAIN(--FR, 0, 255));
+        setThrust(BR_reg, CONSTRAIN(++BR, 0, 255));
+        setThrust(BR_reg, CONSTRAIN(++BL, 0, 255));
+    ):( /*notchange*/
+//         setThrust(FL_reg, );
+//         setThrust(FR_reg, );
+//         setThrust(BR_reg, );
+//         setThrust(BL_reg, );
+    ));
+    (norm_vect_Y>required_vect_Y)?( /*fr++br++fl--bl--*/
+        setThrust(FL_reg, CONSTRAIN(--FL, 0, 255));
+        setThrust(FR_reg, CONSTRAIN(++FR, 0, 255));
+        setThrust(BR_reg, CONSTRAIN(++BR, 0, 255));
+        setThrust(BL_reg, CONSTRAIN(--BL, 0, 255));
+    ):((norm_vect_Y<required_vect_Y)?( /*fl++fr--bl++br--*/
+        setThrust(FL_reg, CONSTRAIN(++FL, 0, 255));
+        setThrust(FR_reg, CONSTRAIN(--FR, 0, 255));
+        setThrust(BR_reg, CONSTRAIN(--BR, 0, 255));
+        setThrust(BR_reg, CONSTRAIN(++BL, 0, 255));
+    ):( /*notchange*/
+//         setThrust(FL_reg, );
+//         setThrust(FR_reg, );
+//         setThrust(BR_reg, );
+//         setThrust(BL_reg, );
+    ));
+    (norm_vect_Z>required_vect_Z)?( /*fl--fr--br--bl--*/
+        setThrust(FL_reg, CONSTRAIN(--FL, 0, 255));
+        setThrust(FR_reg, CONSTRAIN(--FR, 0, 255));
+        setThrust(BR_reg, CONSTRAIN(--BR, 0, 255));
+        setThrust(BL_reg, CONSTRAIN(--BL, 0, 255));
+    ):((norm_vect_Z<required_vect_Z)?( /*fl++fr++bl++br++*/
+        setThrust(FL_reg, CONSTRAIN(++FL, 0, 255));
+        setThrust(FR_reg, CONSTRAIN(++FR, 0, 255));
+        setThrust(BR_reg, CONSTRAIN(++BR, 0, 255));
+        setThrust(BR_reg, CONSTRAIN(++BL, 0, 255));
+    ):( /*notchange*/
+//         setThrust(FL_reg, );
+//         setThrust(FR_reg, );
+//         setThrust(BR_reg, );
+//         setThrust(BL_reg, );
+    ));
 }
 
 int main(void)

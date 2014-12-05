@@ -12,21 +12,50 @@
 #include <stdio.h>
 #include <stdint.h>
 //#include <tgmath.h> // test
-#include <util/delay.h>
+#include <math.h>
 
 #include "Macro.h"
 #include "Proximity.h"
 #include "Assign.h"
 
-volatile static uint8_t required_vect_X= 0x00;
-volatile static uint8_t required_vect_Y= 0x00;
-volatile static uint8_t required_vect_Z= 0xFF;
+#define wGyro           5 // wGyro is a factor of trust Gyroscope. Test it in range: 5...20
 
-volatile static uint8_t current_vect_X;
-volatile static uint8_t current_vect_Y;
-volatile static uint8_t current_vect_Z;
+volatile static uint8_t FLAGS= 0x00;
 
-volatile static uint8_t IMU_DATA_READY;
+#define IMU_DATA_READY  0
+#define CALCULATING     1
+#define FIRST_CALC      2
+
+// Vector instructions from control system
+volatile static vect_t required_vect_X= 0x00;
+volatile static vect_t required_vect_Y= 0x00;
+volatile static vect_t required_vect_Z= 0x7F;
+
+// Accellerometer measure vars
+volatile static vect_t A_measured_vect_X;
+volatile static vect_t A_measured_vect_Y;
+volatile static vect_t A_measured_vect_Z;
+
+// Gyroscope measure vars
+volatile static vect_t G_measured_vect_X;
+volatile static vect_t G_measured_vect_Y;
+volatile static vect_t G_measured_vect_Z; // Is this can be measured?
+
+// Vector normalie
+volatile static vect_t norm_vect_X;
+volatile static vect_t norm_vect_Y;
+volatile static vect_t norm_vect_Z;
+
+// Full Calculation results (Gyro-compensated Accellerometer)
+volatile static vect_t current_vect_X;
+volatile static vect_t current_vect_Y;
+volatile static vect_t current_vect_Z;
+
+// Previous measured (calculated) vector values
+volatile static vect_t prev_vect_X;
+volatile static vect_t prev_vect_Y;
+volatile static vect_t prev_vect_Z;
+
 
 void setPowerReduction() {
     PRR|= (1 << PRTIM1)|(1 << PRSPI)|(1 << PRADC);
@@ -98,6 +127,49 @@ void test()
     BR_reg= 0xFF;
 }
 
+volatile vect_t filtr(vect_t curr_val, vect_t prev_val) {
+    //TODO: 
+    return ((curr_val + prev_val * wGyro)/(1 + wGyro));
+}
+
+volatile vect_t hypo3( volatile vect_t a, volatile vect_t b, volatile vect_t c ) 
+{
+	return sqrt(a*a + b*b + c*c);
+}
+
+void measure() {
+        while(BIT_read(FLAGS, CALCULATING));
+        BIT_clear(FLAGS, IMU_DATA_READY);
+        // Prepare Recent Cycle Data
+        prev_vect_X= A_measured_vect_X;
+        prev_vect_Y= A_measured_vect_Y;
+        prev_vect_Z= A_measured_vect_Z;
+
+        //TODO: Add i2c sensors reading here
+        A_measured_vect_X= filtr(0, prev_vect_X);
+        A_measured_vect_Y= filtr(0, prev_vect_Y);
+        A_measured_vect_Z= filtr(1, prev_vect_Z);
+
+        BIT_set(FLAGS, IMU_DATA_READY);
+}
+
+volatile void calculate() 
+{
+    while(BIT_read(FLAGS, IMU_DATA_READY));
+    BIT_set(FLAGS, CALCULATING);
+    vect_t scalar= hypo3(A_measured_vect_X, A_measured_vect_Y, A_measured_vect_Z);
+    norm_vect_X= A_measured_vect_X/scalar;
+    norm_vect_Y= A_measured_vect_Y/scalar;
+    norm_vect_Z= A_measured_vect_Z/scalar;
+    BIT_clear(FLAGS, CALCULATING);
+}
+
+void makeDecision() {
+    (norm_vect_X>required_vect_X)?(/*fl++fr++bl--br--*/):((norm_vect_X<required_vect_X)?(/*fl--fr--br++bl++*/):(/*notchange*/));
+    (norm_vect_Y>required_vect_Y)?(/*fr++br++fl--bl--*/):((norm_vect_Y<required_vect_Y)?(/*fl--fr--bl++br++*/):(/*notchange*/));
+    (norm_vect_Z>required_vect_Z)?(/*fl--fr--br--bl--*/):((norm_vect_Z<required_vect_Z)?(/*fl++fr++bl++br++*/):(/*notchange*/));
+}
+
 int main(void)
 {
     prepareSystem();
@@ -111,11 +183,10 @@ int main(void)
 
     sei();
 
-    test();
-
     while(1)
     {
         asm("wdr");
+        calculate();
     }
 }
 

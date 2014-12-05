@@ -11,6 +11,8 @@
 
 #include <avr/io.h>
 
+typedef int8_t vect_t;
+
 #define TMR_OFF 0b000
 #define PSC_1     0b001
 #define PSC_0_8     0b010

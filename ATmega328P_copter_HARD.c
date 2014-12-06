@@ -163,43 +163,42 @@ volatile void calculate()
 }
 
 void makeDecision() {
-    if(norm_vect_X>required_vect_X) { /*fl++fr++bl--br--*/
+    if (norm_vect_X>required_vect_X) { /*fl++fr++bl--br--*/
         setThrust(FL_reg, CONSTRAIN(++FL, 0, 255));
         setThrust(FR_reg, CONSTRAIN(++FR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(--BR, 0, 255));
         setThrust(BL_reg, CONSTRAIN(--BL, 0, 255));
-        }
+    }
     else if (norm_vect_X<required_vect_X) { /*fl--fr--br++bl++*/
         setThrust(FL_reg, CONSTRAIN(--FL, 0, 255));
         setThrust(FR_reg, CONSTRAIN(--FR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(++BR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(++BL, 0, 255));
-        }
-
+    }
     if (norm_vect_Y>required_vect_Y) { /*fr++br++fl--bl--*/
         setThrust(FL_reg, CONSTRAIN(--FL, 0, 255));
         setThrust(FR_reg, CONSTRAIN(++FR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(++BR, 0, 255));
         setThrust(BL_reg, CONSTRAIN(--BL, 0, 255));
-        }
+    }
     else if (norm_vect_Y<required_vect_Y) { /*fl++fr--bl++br--*/
         setThrust(FL_reg, CONSTRAIN(++FL, 0, 255));
         setThrust(FR_reg, CONSTRAIN(--FR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(--BR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(++BL, 0, 255));
-        }
+    }
     if (norm_vect_Z>required_vect_Z) { /*fl--fr--br--bl--*/
         setThrust(FL_reg, CONSTRAIN(--FL, 0, 255));
         setThrust(FR_reg, CONSTRAIN(--FR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(--BR, 0, 255));
         setThrust(BL_reg, CONSTRAIN(--BL, 0, 255));
-        }
+    }
     else if (norm_vect_Z<required_vect_Z) { /*fl++fr++bl++br++*/
         setThrust(FL_reg, CONSTRAIN(++FL, 0, 255));
         setThrust(FR_reg, CONSTRAIN(++FR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(++BR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(++BL, 0, 255));
-        }
+    }
 }
 
 int main(void)

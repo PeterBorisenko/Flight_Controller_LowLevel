@@ -96,7 +96,7 @@ void readTWI(uint8_t addr, uint8_t * dat, uint8_t num)
   * 
   * \return void
   */
- void startTWI() {
+ inline void startTWI() {
      TWCR= (1 << TWINT)|(1 << TWSTA)|(1 << TWEN);    // Send START condition
      while (!BIT_read(TWCR, TWINT));                 // Waiting for START condition transmits
 #ifndef WITHOUT_CHECKS
@@ -112,11 +112,11 @@ void readTWI(uint8_t addr, uint8_t * dat, uint8_t num)
  * 
  * \return void
  */
-void stopTWI() {
+inline void stopTWI() {
     TWCR|= (1 << TWINT)|(1 << TWEN)|(1 << TWSTO);   // Send STOP condition
 }
 
- void slaveWriteTWI(uint8_t addr) {
+inline void slaveWriteTWI(uint8_t addr) {
     TWDR= ((addr << 1) | WRITE);                                    // Send command
     TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
     while (!BIT_read(TWCR, TWINT));
@@ -127,7 +127,7 @@ void stopTWI() {
 #endif
  }
 
- void slaveReadTWI(uint8_t addr) {
+inline void slaveReadTWI(uint8_t addr) {
     TWDR= ((addr << 1) | READ);                                    // Send command
     TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
     while (!BIT_read(TWCR, TWINT));
@@ -138,7 +138,7 @@ void stopTWI() {
 #endif
  }
 
-void byteWrite(uint8_t dat) {
+inline void byteWriteTWI(uint8_t dat) {
     TWDR= dat;
     TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
     while (!BIT_read(TWCR, TWINT));

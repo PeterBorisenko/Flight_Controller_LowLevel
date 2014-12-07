@@ -22,15 +22,15 @@
 
 // Functions
 
-void slaveReadTWI(uint8_t);
+inline void slaveReadTWI(uint8_t);
 
-void byteWrite(uint8_t);
+inline void byteWriteTWI(uint8_t);
 
-void slaveWriteTWI(uint8_t);
+inline void slaveWriteTWI(uint8_t);
 
-void stopTWI();
+inline void stopTWI();
 
-void startTWI();
+inline void startTWI();
 
 void readTWI(uint8_t, uint8_t *, uint8_t);
 

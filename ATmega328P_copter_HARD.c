@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <math.h>
+#include <avr/delay.h>
 
 
 #include "Macro.h"
@@ -148,46 +149,46 @@ void calculate()
     BIT_clear(FLAGS, CALCULATING);
 }
 
-inline void setThrust(unsigned char * ESC_reg, uint8_t thrust) {
+volatile static inline void setThrust(unsigned char * ESC_reg, uint8_t thrust) {
     *ESC_reg= thrust;
 }
 
 void makeDecision() {
     if (norm_vect_X>required_vect_X) {
-        setThrust(FL_reg, CONSTRAIN(++FL, 0, 255));
-        setThrust(FR_reg, CONSTRAIN(++FR, 0, 255));
-        setThrust(BR_reg, CONSTRAIN(--BR, 0, 255));
-        setThrust(BL_reg, CONSTRAIN(--BL, 0, 255));
+        setThrust(&FL_reg, CONSTRAIN(++FL, 0, 255));
+        setThrust(&FR_reg, CONSTRAIN(++FR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(--BR, 0, 255));
+        setThrust(&BL_reg, CONSTRAIN(--BL, 0, 255));
     }
     else if (norm_vect_X<required_vect_X) {
-        setThrust(FL_reg, CONSTRAIN(--FL, 0, 255));
-        setThrust(FR_reg, CONSTRAIN(--FR, 0, 255));
-        setThrust(BR_reg, CONSTRAIN(++BR, 0, 255));
-        setThrust(BR_reg, CONSTRAIN(++BL, 0, 255));
+        setThrust(&FL_reg, CONSTRAIN(--FL, 0, 255));
+        setThrust(&FR_reg, CONSTRAIN(--FR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(++BR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(++BL, 0, 255));
     }
     if (norm_vect_Y>required_vect_Y) {
-        setThrust(FL_reg, CONSTRAIN(--FL, 0, 255));
-        setThrust(FR_reg, CONSTRAIN(++FR, 0, 255));
-        setThrust(BR_reg, CONSTRAIN(++BR, 0, 255));
-        setThrust(BL_reg, CONSTRAIN(--BL, 0, 255));
+        setThrust(&FL_reg, CONSTRAIN(--FL, 0, 255));
+        setThrust(&FR_reg, CONSTRAIN(++FR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(++BR, 0, 255));
+        setThrust(&BL_reg, CONSTRAIN(--BL, 0, 255));
     }
     else if (norm_vect_Y<required_vect_Y) {
-        setThrust(FL_reg, CONSTRAIN(++FL, 0, 255));
-        setThrust(FR_reg, CONSTRAIN(--FR, 0, 255));
-        setThrust(BR_reg, CONSTRAIN(--BR, 0, 255));
-        setThrust(BR_reg, CONSTRAIN(++BL, 0, 255));
+        setThrust(&FL_reg, CONSTRAIN(++FL, 0, 255));
+        setThrust(&FR_reg, CONSTRAIN(--FR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(--BR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(++BL, 0, 255));
     }
     if (norm_vect_Z>required_vect_Z) {
-        setThrust(FL_reg, CONSTRAIN(--FL, 0, 255));
-        setThrust(FR_reg, CONSTRAIN(--FR, 0, 255));
-        setThrust(BR_reg, CONSTRAIN(--BR, 0, 255));
-        setThrust(BL_reg, CONSTRAIN(--BL, 0, 255));
+        setThrust(&FL_reg, CONSTRAIN(--FL, 0, 255));
+        setThrust(&FR_reg, CONSTRAIN(--FR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(--BR, 0, 255));
+        setThrust(&BL_reg, CONSTRAIN(--BL, 0, 255));
     }
     else if (norm_vect_Z<required_vect_Z) {
-        setThrust(FL_reg, CONSTRAIN(++FL, 0, 255));
-        setThrust(FR_reg, CONSTRAIN(++FR, 0, 255));
-        setThrust(BR_reg, CONSTRAIN(++BR, 0, 255));
-        setThrust(BR_reg, CONSTRAIN(++BL, 0, 255));
+        setThrust(&FL_reg, CONSTRAIN(++FL, 0, 255));
+        setThrust(&FR_reg, CONSTRAIN(++FR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(++BR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(++BL, 0, 255));
     }
 }
 

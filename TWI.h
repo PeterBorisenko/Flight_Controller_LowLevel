@@ -1,6 +1,11 @@
-#pragma once
+#ifndef TWI_H
+#define TWI_H
 
- #define WITHOUT_CHECKS 1
+#include <stdint.h>
+#include <avr/io.h>
+#include "Macro.h"
+
+#define WITHOUT_CHECKS 1
 
 // TWI States
 #define BUS_ERR         0x00
@@ -22,18 +27,20 @@
 
 // Functions
 
-inline void slaveReadTWI(uint8_t);
+void slaveReadTWI(uint8_t);
 
-inline void byteWriteTWI(uint8_t);
+void byteWriteTWI(uint8_t);
 
-inline uint8_t byteReadTWI();
+uint8_t byteReadTWI();
 
-inline void slaveWriteTWI(uint8_t);
+void slaveWriteTWI(uint8_t);
 
-inline void stopTWI();
+void stopTWI();
 
-inline void startTWI();
+void startTWI();
 
 void readTWI(uint8_t, uint8_t *, uint8_t);
 
 void writeTWI(uint8_t, uint8_t *, uint8_t);
+
+#endif /*TWI_H*/

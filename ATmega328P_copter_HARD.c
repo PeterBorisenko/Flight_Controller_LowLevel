@@ -11,17 +11,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-//#include <tgmath.h> // test
 #include <math.h>
-#include "twi.h"
 
 
 #include "Macro.h"
 #include "Proximity.h"
 #include "Assign.h"
 #include "System.h"
+#include "TWI.h"
 
-#define ACCEL_ADDR
+#define ACCEL_ADDR      0x00
 #define A_DATAXH        0x32
 #define A_DATAXL        0x33
 #define A_DATAYH        0x34
@@ -29,7 +28,7 @@
 #define A_DATAZH        0x36
 #define A_DATAZL        0x37
 
-#define GYRO_ADDR
+#define GYRO_ADDR       0x01
 
 #define wGyro           5 // wGyro is a factor of trust Gyroscope. Test it in range: 5...20
 
@@ -78,7 +77,7 @@ uint8_t BR= 0;
 
 void error( uint8_t affectedModule )
 {
-    assert(!"The method or operation is not implemented.");
+    //assert(!"The method or operation is not implemented.");
 }
 
 void getCurrentImuData() {
@@ -89,9 +88,14 @@ void prepareAccellerometer() {
     
 }
 
+void prepareTWI() {
+    DDRC&= ~((1 << PINC4)|(1 << PINC5));    // Configure TWI Pins as inputs
+    PORTC|= (1 << PINC4)|(1 << PINC5);      // Connect internal PULL-UPs
+}
+
 void readAccellerometer() {
     startTWI();
-    slaveWriteTWI();
+    slaveWriteTWI(ACCEL_ADDR);
     byteWriteTWI(A_DATAXH);
     startTWI();
     slaveReadTWI(ACCEL_ADDR);
@@ -101,6 +105,7 @@ void readAccellerometer() {
     A_measured_vect_Y= (temp << 8)|(byteReadTWI());
     temp= byteReadTWI();
     A_measured_vect_Z= (temp << 8)|(byteReadTWI());
+    stopTWI();
 }
 
 void prepareGyro() {
@@ -108,7 +113,6 @@ void prepareGyro() {
 }
 
 volatile vect_t filtr(vect_t curr_val, vect_t prev_val) {
-    //TODO: 
     return ((curr_val + prev_val * wGyro)/(1 + wGyro));
 }
 
@@ -133,7 +137,7 @@ void measure() {
         BIT_set(FLAGS, IMU_DATA_READY);
 }
 
-volatile void calculate() 
+void calculate() 
 {
     while(!BIT_read(FLAGS, IMU_DATA_READY));
     BIT_set(FLAGS, CALCULATING);

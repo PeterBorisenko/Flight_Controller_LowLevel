@@ -5,7 +5,7 @@
  *  Author: Disgust
  */ 
 
- #include "System.h"
+#include "System.h"
 
 void prepareSystem()
 {
@@ -18,11 +18,11 @@ void prepareSystem()
      PRR|= (1 << PRTIM1)|(1 << PRSPI)|(1 << PRADC);
  }
 
- void prepareTimer(uint8_t timer, uint8_t mode, uint8_t prescaler)
+ void prepareTimer(uint8_t tmr, uint8_t mode, uint8_t prescaler)
  {
-     switch (timer)
+     switch (tmr)
      {
-         default: case 0x00:
+         case 0x00:
          TCCR0A= 0x00;
          TCCR0B= (0x00 | prescaler);
          OCR0A= 0x00;

@@ -6,8 +6,6 @@
  *  Author: Disgust
  */ 
 
- #include "twi.h"
-
  /**
   * \brief 
   * 
@@ -23,7 +21,7 @@
      while (!BIT_read(TWCR, TWINT));                 // Waiting for START condition transmits
 #ifndef WITHOUT_CHECKS
      if ((TWSTA & 0xF8) != START) {                  // Check for transmission status (masking TWI prescaler bits)
-         error(TWI);
+         //error(TWI);
      }
 #endif
      TWDR= ((addr << 1) | WRITE);                                    // Send command
@@ -31,16 +29,16 @@
      while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
      if ((TWSTA & 0xF8) != MT_SLA_ACK) {
-         error(TWI);
+         //error(TWI);
      }
 #endif
      for (int i= num; i >= 0; i--) {
-         TWDR= dat;
+         TWDR= *dat;
          TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
          while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
          if ((TWSTA & 0xF8) != MT_DATA_ACK) {
-             error(TWI);
+             //error(TWI);
          }
 #endif
          dat++;
@@ -63,7 +61,7 @@ void readTWI(uint8_t addr, uint8_t * dat, uint8_t num)
      while (!BIT_read(TWCR, TWINT));                 // Waiting for START condition transmits
 #ifndef WITHOUT_CHECKS
      if ((TWSTA & 0xF8) != START) {                  // Check for transmission status (masking TWI prescaler bits)
-         error(TWI);
+         //error(TWI);
      }
 #endif
      TWDR= ((addr << 1) | READ);                                    // Send command
@@ -71,18 +69,18 @@ void readTWI(uint8_t addr, uint8_t * dat, uint8_t num)
      while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
      if ((TWSTA & 0xF8) != MR_SLA_ACK) {
-         error(TWI);
+         //error(TWI);
      }
 #endif
      for (int i= num; i >= 0; i--) {
          TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
          while (!BIT_read(TWCR, TWINT));
          if ((TWSTA & 0xF8) == MR_DATA_ACK) {
-             dat* = TWDR;
+             *dat = TWDR;
          }
 #ifndef WITHOUT_CHECKS
          else {
-             error(TWI);
+             //error(TWI);
          }
 #endif
          dat++;
@@ -96,12 +94,12 @@ void readTWI(uint8_t addr, uint8_t * dat, uint8_t num)
   * 
   * \return void
   */
- inline void startTWI() {
+void startTWI() {
      TWCR= (1 << TWINT)|(1 << TWSTA)|(1 << TWEN);    // Send START condition
      while (!BIT_read(TWCR, TWINT));                 // Waiting for START condition transmits
 #ifndef WITHOUT_CHECKS
      if ((TWSTA & 0xF8) != START) {                  // Check for transmission status (masking TWI prescaler bits)
-         error(TWI);
+         //error(TWI);
      }
 #endif
  }
@@ -112,39 +110,39 @@ void readTWI(uint8_t addr, uint8_t * dat, uint8_t num)
  * 
  * \return void
  */
-inline void stopTWI() {
+void stopTWI() {
     TWCR|= (1 << TWINT)|(1 << TWEN)|(1 << TWSTO);   // Send STOP condition
 }
 
-inline void MasterWriteTWI(uint8_t addr) {
+void slaveWriteTWI(uint8_t addr) {
     TWDR= ((addr << 1) | WRITE);                                    // Send command
     TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
     while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
     if ((TWSTA & 0xF8) != MT_SLA_ACK) {
-        error(TWI);
+        //error(TWI);
     }
 #endif
  }
 
-inline void MasterReadTWI(uint8_t addr) {
+void slaveReadTWI(uint8_t addr) {
     TWDR= ((addr << 1) | READ);                                    // Send command
     TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
     while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
     if ((TWSTA & 0xF8) != MR_SLA_ACK) {
-        error(TWI);
+        //error(TWI);
     }
 #endif
  }
 
-inline void byteWriteTWI(uint8_t dat) {
+void byteWriteTWI(uint8_t dat) {
     TWDR= dat;
     TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
     while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
     if ((TWSTA & 0xF8) != MT_DATA_ACK) {
-        error(TWI);
+        //error(TWI);
     }
 #endif
 }
@@ -153,12 +151,16 @@ uint8_t byteReadTWI()
 {
 	// TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
 	while (!BIT_read(TWCR, TWINT));
-#ifndef WITHOUT_CHECKS
-	if ((TWSTA & 0xF8) != MR_DATA_ACK) {
-    	error(TWI);
+
+	if ((TWSTA & 0xF8) == MR_DATA_ACK) {
+    	return TWDR;
 	}
-#endif
+
+#ifndef WITHOUT_CHECKS
     else {
-        return TWDR;
+        //error(TWI);
+        return 0;
     }
+#endif
+    return 0;
 }

@@ -4,15 +4,16 @@
  * Created: 12/7/2014 3:19:32 AM
  *  Author: Disgust
  */ 
+#ifndef SYSTEM_H
+#define SYSTEM_H
 
-
-#ifndef SYSTEM_H_
-#define SYSTEM_H_
+#include <stdint.h>
+#include "Assign.h"
 
 void setPowerReduction();
-void prepareTimer(uint8_t timer, uint8_t mode, uint8_t prescaler);
+void prepareTimer(uint8_t, uint8_t, uint8_t);
 void prepareESC();
 void prepareSystem();
+void prepareUSART();
 
-
-#endif /* SYSTEM_H_ */
+#endif /*SYSTEM_H*/

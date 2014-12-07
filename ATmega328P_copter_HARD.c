@@ -13,10 +13,23 @@
 #include <stdint.h>
 //#include <tgmath.h> // test
 #include <math.h>
+#include "twi.h"
+
 
 #include "Macro.h"
 #include "Proximity.h"
 #include "Assign.h"
+#include "System.h"
+
+#define ACCEL_ADDR
+#define A_DATAXH        0x32
+#define A_DATAXL        0x33
+#define A_DATAYH        0x34
+#define A_DATAYL        0x35
+#define A_DATAZH        0x36
+#define A_DATAZL        0x37
+
+#define GYRO_ADDR
 
 #define wGyro           5 // wGyro is a factor of trust Gyroscope. Test it in range: 5...20
 
@@ -63,66 +76,35 @@ uint8_t FR= 0;
 uint8_t BL= 0;
 uint8_t BR= 0;
 
-void setPowerReduction() {
-    PRR|= (1 << PRTIM1)|(1 << PRSPI)|(1 << PRADC);
-}
-
-void prepareTimer(uint8_t timer, uint8_t mode, uint8_t prescaler) 
+void error( uint8_t affectedModule )
 {
-    switch (timer)
-    {
-    default: case 0x00:
-        TCCR0A= 0x00;
-        TCCR0B= (0x00 | prescaler);
-        OCR0A= 0x00;
-        OCR0B= 0x00;
-        TIMSK0= 0x07; //Enable all three timer interrupts
-        TIFR0= 0x07; // Reset timer interrupts
-    	break;
-
-    case 0x01:
-        break;
-
-    case 0x02:
-        TCCR2A= 0x00;
-        TCCR2B= (0x00 | prescaler);
-        OCR2A= 0x00;
-        OCR2B= 0x00;
-        TIMSK2= 0x07;
-        TIFR2= 0x07; // Reset timer interrupts
-        break;
-    }
-}
-
-void prepareI2C() 
-{
-	//assert(!"The method or operation is not implemented.");
-}
-
-void prepareUSART() 
-{
-	//assert(!"The method or operation is not implemented.");
-}
-
-void prepareESC() 
-{
-    ESC_dir&= ~((1 << FL_pin)|(1 << FR_pin)|(1 << BL_pin)|(1 << BR_pin));
-	ESC_dir|= (1 << FL_pin)|(1 << FR_pin)|(1 << BL_pin)|(1 << BR_pin); // ESC control pins are OUTs
-}
-
-inline void setThrust(unsigned char * ESC_reg, uint8_t thrust) {
-    *ESC_reg= thrust;
+    assert(!"The method or operation is not implemented.");
 }
 
 void getCurrentImuData() {
     
 }
 
-void prepareSystem() 
-{
-    WDTCSR|= (1 << WDE)|(1 << WDIE);
-    //WDTCSR|=(0b111 << WDP0);
-	setPowerReduction();
+void prepareAccellerometer() {
+    
+}
+
+void readAccellerometer() {
+    startTWI();
+    slaveWriteTWI();
+    byteWriteTWI(A_DATAXH);
+    startTWI();
+    slaveReadTWI(ACCEL_ADDR);
+    uint8_t temp= byteReadTWI();
+    A_measured_vect_X= (temp << 8)|(byteReadTWI());
+    temp= byteReadTWI();
+    A_measured_vect_Y= (temp << 8)|(byteReadTWI());
+    temp= byteReadTWI();
+    A_measured_vect_Z= (temp << 8)|(byteReadTWI());
+}
+
+void prepareGyro() {
+
 }
 
 volatile vect_t filtr(vect_t curr_val, vect_t prev_val) {
@@ -143,17 +125,17 @@ void measure() {
         prev_vect_Y= A_measured_vect_Y;
         prev_vect_Z= A_measured_vect_Z;
 
-        //TODO: Add i2c sensors reading here
-        A_measured_vect_X= filtr(0, prev_vect_X);
-        A_measured_vect_Y= filtr(0, prev_vect_Y);
-        A_measured_vect_Z= filtr(1, prev_vect_Z);
+        readAccellerometer();
+        A_measured_vect_X= filtr(A_measured_vect_X, prev_vect_X);
+        A_measured_vect_Y= filtr(A_measured_vect_Y, prev_vect_Y);
+        A_measured_vect_Z= filtr(A_measured_vect_Z, prev_vect_Z);
 
         BIT_set(FLAGS, IMU_DATA_READY);
 }
 
 volatile void calculate() 
 {
-    while(BIT_read(FLAGS, IMU_DATA_READY));
+    while(!BIT_read(FLAGS, IMU_DATA_READY));
     BIT_set(FLAGS, CALCULATING);
     vect_t scalar= hypo3(A_measured_vect_X, A_measured_vect_Y, A_measured_vect_Z);
     norm_vect_X= A_measured_vect_X/scalar;
@@ -162,38 +144,42 @@ volatile void calculate()
     BIT_clear(FLAGS, CALCULATING);
 }
 
+inline void setThrust(unsigned char * ESC_reg, uint8_t thrust) {
+    *ESC_reg= thrust;
+}
+
 void makeDecision() {
-    if (norm_vect_X>required_vect_X) { /*fl++fr++bl--br--*/
+    if (norm_vect_X>required_vect_X) {
         setThrust(FL_reg, CONSTRAIN(++FL, 0, 255));
         setThrust(FR_reg, CONSTRAIN(++FR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(--BR, 0, 255));
         setThrust(BL_reg, CONSTRAIN(--BL, 0, 255));
     }
-    else if (norm_vect_X<required_vect_X) { /*fl--fr--br++bl++*/
+    else if (norm_vect_X<required_vect_X) {
         setThrust(FL_reg, CONSTRAIN(--FL, 0, 255));
         setThrust(FR_reg, CONSTRAIN(--FR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(++BR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(++BL, 0, 255));
     }
-    if (norm_vect_Y>required_vect_Y) { /*fr++br++fl--bl--*/
+    if (norm_vect_Y>required_vect_Y) {
         setThrust(FL_reg, CONSTRAIN(--FL, 0, 255));
         setThrust(FR_reg, CONSTRAIN(++FR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(++BR, 0, 255));
         setThrust(BL_reg, CONSTRAIN(--BL, 0, 255));
     }
-    else if (norm_vect_Y<required_vect_Y) { /*fl++fr--bl++br--*/
+    else if (norm_vect_Y<required_vect_Y) {
         setThrust(FL_reg, CONSTRAIN(++FL, 0, 255));
         setThrust(FR_reg, CONSTRAIN(--FR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(--BR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(++BL, 0, 255));
     }
-    if (norm_vect_Z>required_vect_Z) { /*fl--fr--br--bl--*/
+    if (norm_vect_Z>required_vect_Z) {
         setThrust(FL_reg, CONSTRAIN(--FL, 0, 255));
         setThrust(FR_reg, CONSTRAIN(--FR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(--BR, 0, 255));
         setThrust(BL_reg, CONSTRAIN(--BL, 0, 255));
     }
-    else if (norm_vect_Z<required_vect_Z) { /*fl++fr++bl++br++*/
+    else if (norm_vect_Z<required_vect_Z) {
         setThrust(FL_reg, CONSTRAIN(++FL, 0, 255));
         setThrust(FR_reg, CONSTRAIN(++FR, 0, 255));
         setThrust(BR_reg, CONSTRAIN(++BR, 0, 255));
@@ -207,7 +193,6 @@ int main(void)
     prepareTimer(0,0, PSC_0_64);
     prepareTimer(2,0, PSC_2_64);
     
-    prepareI2C();
     prepareUSART();
     
     prepareESC();
@@ -309,7 +294,7 @@ ISR(TIMER2_COMPB_vect){
 }
 
 ISR(TIMER1_OVF_vect){ // System TIMER
-    
+    // TODO: Call Task Manager from here
 }
 
 ISR(WDT_vect) {

@@ -116,7 +116,7 @@ inline void stopTWI() {
     TWCR|= (1 << TWINT)|(1 << TWEN)|(1 << TWSTO);   // Send STOP condition
 }
 
-inline void slaveWriteTWI(uint8_t addr) {
+inline void MasterWriteTWI(uint8_t addr) {
     TWDR= ((addr << 1) | WRITE);                                    // Send command
     TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
     while (!BIT_read(TWCR, TWINT));
@@ -127,7 +127,7 @@ inline void slaveWriteTWI(uint8_t addr) {
 #endif
  }
 
-inline void slaveReadTWI(uint8_t addr) {
+inline void MasterReadTWI(uint8_t addr) {
     TWDR= ((addr << 1) | READ);                                    // Send command
     TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
     while (!BIT_read(TWCR, TWINT));
@@ -147,4 +147,18 @@ inline void byteWriteTWI(uint8_t dat) {
         error(TWI);
     }
 #endif
+}
+
+uint8_t byteReadTWI()
+{
+	// TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
+	while (!BIT_read(TWCR, TWINT));
+#ifndef WITHOUT_CHECKS
+	if ((TWSTA & 0xF8) != MR_DATA_ACK) {
+    	error(TWI);
+	}
+#endif
+    else {
+        return TWDR;
+    }
 }

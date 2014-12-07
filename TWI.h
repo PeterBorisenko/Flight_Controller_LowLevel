@@ -26,6 +26,8 @@ inline void slaveReadTWI(uint8_t);
 
 inline void byteWriteTWI(uint8_t);
 
+inline uint8_t byteReadTWI();
+
 inline void slaveWriteTWI(uint8_t);
 
 inline void stopTWI();

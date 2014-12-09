@@ -4,7 +4,6 @@
  * Created: 4/18/2014 8:05:30 PM
  *  Author: Disgust
  */ 
- #define F_CPU 16000000UL
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -198,7 +197,7 @@ int main(void)
     prepareTimer(0,0, PSC_0_64);
     prepareTimer(2,0, PSC_2_64);
     
-    prepareUSART();
+    prepareUSART(BAUD_CALC);
     
     prepareESC();
 
@@ -300,6 +299,18 @@ ISR(TIMER2_COMPB_vect){
 
 ISR(TIMER1_OVF_vect){ // System TIMER
     // TODO: Call Task Manager from here
+}
+
+ISR (USART_RX_vect) {
+    
+}
+
+ISR (USART_TX_vect) {
+    
+}
+
+ISR (USART_UDRE_vect) {
+
 }
 
 ISR(WDT_vect) {

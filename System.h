@@ -14,6 +14,9 @@ void setPowerReduction();
 void prepareTimer(uint8_t, uint8_t, uint8_t);
 void prepareESC();
 void prepareSystem();
-void prepareUSART();
+void prepareUSART(unsigned int);
+
+void sendChar(uint8_t);
+uint8_t receiveChar();
 
 #endif /*SYSTEM_H*/

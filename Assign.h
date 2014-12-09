@@ -11,6 +11,10 @@
 
 #include <avr/io.h>
 
+#define F_CPU 16000000UL
+#define BAUD 9600
+#define BAUD_CALC F_CPU/16/BAUD-1
+
 typedef int16_t vect_t;
 
 // Timer Prescaler

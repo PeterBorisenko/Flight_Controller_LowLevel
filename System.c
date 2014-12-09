@@ -45,9 +45,12 @@ void prepareSystem()
      }
  }
 
- void prepareUSART()
+ void prepareUSART(unsigned int ubrr)
  {
-     //assert(!"The method or operation is not implemented.");
+     UBRR0H= (unsigned char) (ubrr >> 8);
+     UBRR0L= (unsigned char) ubrr;
+     UCSR0B= (1 << RXCIE0)|(1 << TXCIE0)|(1 << RXEN0)|(1 << TXEN0);
+     UCSR0C= (1 << USBS0)|(1 << UCSZ00); // Frame format: 8 data, 2 stop
  }
 
  void prepareESC()
@@ -55,3 +58,18 @@ void prepareSystem()
      ESC_dir&= ~((1 << FL_pin)|(1 << FR_pin)|(1 << BL_pin)|(1 << BR_pin));
      ESC_dir|= (1 << FL_pin)|(1 << FR_pin)|(1 << BL_pin)|(1 << BR_pin); // ESC control pins are OUTs
  }
+ 
+ void sendChar( uint8_t byteToSend)
+ {
+ 	while (!(UCSR0A & (1 << UDRE0)))
+ 	{
+        UDR0= byteToSend;
+ 	}
+ }
+
+uint8_t receiveChar()
+{
+	return UDR0;
+}
+
+ 

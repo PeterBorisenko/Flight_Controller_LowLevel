@@ -15,7 +15,21 @@
 #define BAUD 9600
 #define BAUD_CALC F_CPU/16/BAUD-1
 
+// USART States
+#define USART_IDLE  0x00
+#define USART_REQ   0x01
+#define HEADER_OK   0x02
+#define RECEIVE_X   0x03
+#define RECEIVE_Y   0x04
+#define RECEIVE_Z   0x05
+
+// Frame parts
+#define HEADER      0x1010
+#define ACK         0x05
+#define NACK        0x11
+
 typedef int16_t vect_t;
+#define DATA_WIDTH 2
 
 // Timer Prescaler
 #define TMR_OFF         0b000

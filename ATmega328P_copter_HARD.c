@@ -11,14 +11,15 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <math.h>
-#include <avr/delay.h>
+/*#include <avr/delay.h>*/
 
 
 #include "Macro.h"
-#include "Proximity.h"
 #include "Assign.h"
 #include "System.h"
 #include "TWI.h"
+
+volatile uint8_t receiveByteCount= DATA_WIDTH;
 
 #define ACCEL_ADDR      0x00
 #define A_DATAXH        0x32
@@ -36,12 +37,26 @@ volatile static uint8_t FLAGS= 0x00;
 
 #define IMU_DATA_READY  0
 #define CALCULATING     1
-#define FIRST_CALC      2
+
+volatile static uint8_t USART_STATE= USART_IDLE;
 
 // Vector instructions from control system
-volatile static vect_t required_vect_X= 0x00;
-volatile static vect_t required_vect_Y= 0x00;
-volatile static vect_t required_vect_Z= 0x7F;
+volatile static vect_t received_vect_X;
+volatile static vect_t received_vect_Y;
+volatile static vect_t received_vect_Z;
+
+volatile static vect_t required_vect_X;
+volatile static vect_t required_vect_Y;
+volatile static vect_t required_vect_Z;
+
+// union required {
+//     vect_t vect;
+//     uint8_t ch : DATA_WIDTH;
+// };
+// 
+// required required_vect_X;
+// required required_vect_Y;
+// required required_vect_Z;
 
 // Accellerometer measure vars
 volatile static vect_t A_measured_vect_X;
@@ -148,7 +163,7 @@ void calculate()
     BIT_clear(FLAGS, CALCULATING);
 }
 
-volatile static inline void setThrust(unsigned char * ESC_reg, uint8_t thrust) {
+static inline void setThrust(unsigned char * ESC_reg, uint8_t thrust) {
     *ESC_reg= thrust;
 }
 
@@ -302,15 +317,64 @@ ISR(TIMER1_OVF_vect){ // System TIMER
 }
 
 ISR (USART_RX_vect) {
-    
-}
-
-ISR (USART_TX_vect) {
-    
-}
-
-ISR (USART_UDRE_vect) {
-
+    switch (USART_STATE)
+    {
+    case USART_IDLE:
+        if ((HEADER & 0xFF) == receiveChar())
+        {
+            USART_STATE= USART_REQ;
+        }
+        else {
+            sendChar(NACK);
+        }
+    	break;
+    case USART_REQ:
+        if (((HEADER >> 8)&0xFF) == receiveChar())
+        {
+            USART_STATE= HEADER_OK;
+        }
+        else {
+            sendChar(NACK);
+        }
+    	break;
+    case HEADER_OK:
+        BIT_set(FLAGS, DATA_RECEIVING);
+        USART_STATE= RECEIVE_X;
+    case RECEIVE_X:
+        if (receiveByteCount > 0) {
+            received_vect_X= (received_vect_X << 8)|receiveChar();
+            receiveByteCount--;
+        }
+        if (receiveByteCount == 0) {
+            receiveByteCount= DATA_WIDTH;
+            USART_STATE= RECEIVE_Y;
+        }
+    	break;
+    case RECEIVE_Y:
+        if (receiveByteCount > 0) {
+            received_vect_Y= (received_vect_Y << 8)|receiveChar();
+            receiveByteCount--;
+        }
+        if (receiveByteCount == 0) {
+            receiveByteCount= DATA_WIDTH;
+            USART_STATE= RECEIVE_Z;
+        }
+    	break;
+    case RECEIVE_Z:
+        if (receiveByteCount > 0) {
+            received_vect_Z= (received_vect_Z << 8)|receiveChar();
+            receiveByteCount--;
+        }
+        if (receiveByteCount == 0) {
+            receiveByteCount= DATA_WIDTH;
+            required_vect_X= received_vect_X;
+            required_vect_Y= received_vect_Y;
+            required_vect_Z= received_vect_Z;
+            sendChar(ACK);
+            USART_STATE= USART_IDLE;
+        }
+    	break;
+    }
 }
 
 ISR(WDT_vect) {

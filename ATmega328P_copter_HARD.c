@@ -221,12 +221,16 @@ int main(void)
     while(1)
     {
         asm("wdr");
-        measure();
-        calculate();
-        makeDecision();
+        sendChar('a');
+//         measure();
+//         asm("wdr");
+//         calculate();
+//         asm("wdr");
+//         makeDecision();
     }
 }
 
+// Software PWM
 ISR(TIMER0_OVF_vect){
     ESC_port|= (1 << FL_pin)|(1 << FR_pin);
     if (BIT_read(TIFR0, OCR0A))
@@ -314,13 +318,14 @@ ISR(TIMER2_COMPB_vect){
 
 ISR(TIMER1_OVF_vect){ // System TIMER
     // TODO: Call Task Manager from here
+
 }
 
 ISR (USART_RX_vect) {
     switch (USART_STATE)
     {
     case USART_IDLE:
-        if ((HEADER & 0xFF) == receiveChar())
+        if (((HEADER >> 8)&0xFF) == receiveChar())
         {
             USART_STATE= USART_REQ;
         }
@@ -329,7 +334,7 @@ ISR (USART_RX_vect) {
         }
     	break;
     case USART_REQ:
-        if (((HEADER >> 8)&0xFF) == receiveChar())
+        if ((unsigned char)HEADER == receiveChar())
         {
             USART_STATE= HEADER_OK;
         }
@@ -338,7 +343,6 @@ ISR (USART_RX_vect) {
         }
     	break;
     case HEADER_OK:
-        BIT_set(FLAGS, DATA_RECEIVING);
         USART_STATE= RECEIVE_X;
     case RECEIVE_X:
         if (receiveByteCount > 0) {
@@ -347,6 +351,7 @@ ISR (USART_RX_vect) {
         }
         if (receiveByteCount == 0) {
             receiveByteCount= DATA_WIDTH;
+			sendChar(ACK);
             USART_STATE= RECEIVE_Y;
         }
     	break;
@@ -357,6 +362,7 @@ ISR (USART_RX_vect) {
         }
         if (receiveByteCount == 0) {
             receiveByteCount= DATA_WIDTH;
+			sendChar(ACK);
             USART_STATE= RECEIVE_Z;
         }
     	break;

@@ -29,7 +29,7 @@
 #ifdef __XC8
 
 #elif defined IO_H
- #define BAUD_DIVIDER(X) (( F_CPU /((X) * 16 ) ) - 1) // x - baudrate
+ #define BAUD_DIVIDER(X) ((F_CPU/(X)/16)-1) // x - baudrate
 #endif
 
 #endif /* DEFINES_H_ */

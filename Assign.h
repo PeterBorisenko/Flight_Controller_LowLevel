@@ -12,7 +12,7 @@
 #include <avr/io.h>
 
 #define F_CPU 16000000UL
-#define BAUD 9600
+#define BAUD 1200
 #define BAUD_CALC F_CPU/16/BAUD-1
 
 // USART States

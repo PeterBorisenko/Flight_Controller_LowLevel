@@ -64,10 +64,8 @@ void prepareSystem()
  
  void sendChar(uint8_t byteToSend)
  {
- 	while (!(UCSR0A & (1 << UDRE0)))
- 	{
-        UDR0= byteToSend;
- 	}
+ 	while (!(UCSR0A & (1 << UDRE0)));
+    UDR0= byteToSend;
  }
 
 uint8_t receiveChar()

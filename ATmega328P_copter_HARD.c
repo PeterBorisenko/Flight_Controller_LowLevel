@@ -18,20 +18,13 @@
 #include "Assign.h"
 #include "System.h"
 #include "TWI.h"
+#include "ADXL345.h"
 
 volatile uint8_t receiveByteCount= DATA_WIDTH;
 
-#define ACCEL_ADDR      0x00
-#define A_DATAXH        0x32
-#define A_DATAXL        0x33
-#define A_DATAYH        0x34
-#define A_DATAYL        0x35
-#define A_DATAZH        0x36
-#define A_DATAZL        0x37
-
 #define GYRO_ADDR       0x01
 
-#define wGyro           5 // wGyro is a factor of trust Gyroscope. Test it in range: 5...20
+#define wGyro           5 // wGyro is a factor of trust Gyroscope. Test it in a range: 5...20
 
 volatile static uint8_t FLAGS= 0x00;
 
@@ -100,27 +93,30 @@ void getCurrentImuData() {
 }
 
 void prepareAccellerometer() {
-    
+    uint8_t status= ADXL345_Init();
+	if (!status) {
+		//module fault or module not exist
+	}
+	ADXL345_SetPowerMode(0x01);
 }
 
-void prepareTWI() {
-    DDRC&= ~((1 << PINC4)|(1 << PINC5));    // Configure TWI Pins as inputs
-    PORTC|= (1 << PINC4)|(1 << PINC5);      // Connect internal PULL-UPs
-}
 
 void readAccellerometer() {
-    startTWI();
-    slaveWriteTWI(ACCEL_ADDR);
-    byteWriteTWI(A_DATAXH);
-    startTWI();
-    slaveReadTWI(ACCEL_ADDR);
-    uint8_t temp= byteReadTWI();
-    A_measured_vect_X= (temp << 8)|(byteReadTWI());
-    temp= byteReadTWI();
-    A_measured_vect_Y= (temp << 8)|(byteReadTWI());
-    temp= byteReadTWI();
-    A_measured_vect_Z= (temp << 8)|(byteReadTWI());
-    stopTWI();
+	
+	ADXL345_GetXyz(&A_measured_vect_X, &A_measured_vect_Y, &A_measured_vect_Z);
+	
+//     TWIstart();
+//     TWIslaveWrite(ACCEL_ADDR);
+//     TWIbyteWrite(A_DATAXH);
+//     TWIstart();
+//     TWIslaveRead(ACCEL_ADDR);
+//     uint8_t temp= TWIbyteRead();
+//     A_measured_vect_X= (temp << 8)|(TWIbyteRead());
+//     temp= TWIbyteRead();
+//     A_measured_vect_Y= (temp << 8)|(TWIbyteRead());
+//     temp= TWIbyteRead();
+//     A_measured_vect_Z= (temp << 8)|(TWIbyteRead());
+//     TWIstop();
 }
 
 void prepareGyro() {
@@ -215,18 +211,17 @@ int main(void)
     prepareUSART(BAUD_CALC);
     
     prepareESC();
-
+	prepareAccellerometer();
     sei();
 
     while(1)
     {
         asm("wdr");
-        sendChar('a');
-//         measure();
-//         asm("wdr");
-//         calculate();
-//         asm("wdr");
-//         makeDecision();
+        measure();
+        asm("wdr");
+        calculate();
+        asm("wdr");
+        makeDecision();
     }
 }
 
@@ -384,5 +379,5 @@ ISR (USART_RX_vect) {
 }
 
 ISR(WDT_vect) {
-    ESC_port&= ~((1 << BL_pin)|(1 << BR_pin)|(1 << FL_pin)|(1 << FR_pin)); // Shut down Engines If SYSTEM_FAULT
+    ESC_port&= ~((1 << BL_pin)|(1 << BR_pin)|(1 << FL_pin)|(1 << FR_pin)); // Shut down Engines If SYSTEM_FAULT =)
 }

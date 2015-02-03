@@ -1,66 +1,66 @@
-/******************** (C) COPYRIGHT 2011 STMicroelectronics ********************
-* File Name          : L3G4200D.c
-* Author             : MSH Application Team
-* Author             : Andrea Labombarda
-* Version            : $Revision:$
-* Date               : $Date:$
-* Description        : L3G4200D driver file
-*                      
-* HISTORY:
-* Date               |	Modification                    |	Author
-* 22/03/2011         |	Initial Revision                |	Andrea Labombarda
-
-********************************************************************************
-* THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
-* WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
-* AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
-* INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
-* CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
-* INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
-*
-* THIS SOFTWARE IS SPECIFICALLY DESIGNED FOR EXCLUSIVE USE WITH ST PARTS.
-*
-*******************************************************************************/
-
 /* Includes ------------------------------------------------------------------*/
 #include "L3G4200D.h"
-#include "./Communication.h"
-/* Private typedef -----------------------------------------------------------*/
-/* Private define ------------------------------------------------------------*/
-/* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
-/* Private function prototypes -----------------------------------------------*/
+#include "../Communication.h"
 
+unsigned char L3G4200D_COMMUNICATION = I2C_COMMUNICATION;
 /*******************************************************************************
 * Function Name		: L3G4200D_ReadReg
-* Description		: Generic Reading function. It must be fullfilled with either
-*					: I2C or SPI reading functions					
+* Description		: Generic Reading function.				
 * Input				: Register Address
-* Output			: Data REad
-* Return			: None
+* Output			: None
+* Return			: Data Read
 *******************************************************************************/
-u8_t L3G4200D_ReadReg(u8_t Reg, u8_t* Data) {
-  
-  //To be completed with either I2c or SPI reading function
-  //i.e.: *Data = SPI_Mems_Read_Reg( Reg );
-  
-  return 1;
+uint8_t L3G4200D_ReadReg(uint8_t registerAddress) {
+  uint8_t readData[2] = {0, 0};
+  uint8_t writeData[2] = {0, 0};
+  uint8_t registerValue = 0;
+  //uint8_t slaveDeviceId = L3G4200D_SPI_ID;
+
+  if(L3G4200D_COMMUNICATION == SPI_COMMUNICATION)
+  {
+	  readData[0] = 0x80 + registerAddress;
+	  readData[1] = 0;
+	  //        SPIread(slaveDeviceId, readData, 2);
+	  registerValue = readData[1];
+  }
+  else
+  {
+	  writeData[0] = registerAddress;
+	  TWIstart();
+	  TWIslaveRead(L3G4200D_ADDRESS);
+	  TWIbyteWrite(writeData[0]);
+	  TWIbyteWrite(writeData[1]);
+	  TWIread(L3G4200D_ADDRESS, readData, 1);
+	  registerValue = readData[0];
+  }
+
+  return(registerValue);
 }
 
 /*******************************************************************************
 * Function Name		: L3G4200D_WriteReg
-* Description		: Generic Writing function. It must be fullfilled with either
-*					: I2C or SPI writing function
+* Description		: Generic Writing function.
 * Input				: Register Address, Data to be written
 * Output			: None
 * Return			: None
 *******************************************************************************/
-u8_t L3G4200D_WriteReg(u8_t Reg, u8_t Data) {
+void L3G4200D_WriteReg(uint8_t registerAddress, uint8_t registerValue) {
     
-  //To be completed with either I2c or SPI writing function
-  //i.e.: SPI_Mems_Write_Reg(Reg, Data);
-  
-  return 1;
+  unsigned char writeData[2] = {0, 0};
+  //unsigned char slaveDeviceId = L3G4200D_SPI_ID;
+
+  if(L3G4200D_COMMUNICATION == SPI_COMMUNICATION)
+  {
+	  writeData[0] = registerAddress;
+	  writeData[1] = registerValue;
+	  //        SPI_Write(slaveDeviceId, writeData, 2);
+  }
+  else
+  {
+	  writeData[0] = registerAddress;
+	  writeData[1] = registerValue;
+	  TWIwrite(L3G4200D_ADDRESS, writeData, 2);
+  }
 }
 /* Private functions ---------------------------------------------------------*/
 
@@ -71,20 +71,13 @@ u8_t L3G4200D_WriteReg(u8_t Reg, u8_t Data) {
 * Input          : Output Data Rate
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetODR(L3G4200D_ODR_t ov){
-  u8_t value;
-
-  if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG1, &value) )
-    return MEMS_ERROR;
-
-  value &= 0x0f;
-  value |= ov<<4;
-
-  if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG1, value) )
-    return MEMS_ERROR;
-
-  return MEMS_SUCCESS;
+void L3G4200D_SetODR(L3G4200D_ODR_t ov){
+	uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG1);
+	value &= 0x0f;
+	value |= ov<<4;
+	L3G4200D_WriteReg(L3G4200D_CTRL_REG1, value);
 }
 
 
@@ -94,13 +87,11 @@ status_t L3G4200D_SetODR(L3G4200D_ODR_t ov){
 * Input          : Modality (NORMAL, SLEEP, POWER_DOWN)
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetMode(L3G4200D_Mode_t md) {
-  u8_t value;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG1, &value) )
-    return MEMS_ERROR;
-                  
+void L3G4200D_SetMode(L3G4200D_Mode_t md) {
+
+  uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG1);  
   switch(md) {
   
   case L3G4200D_POWER_DOWN:		
@@ -119,13 +110,10 @@ status_t L3G4200D_SetMode(L3G4200D_Mode_t md) {
     break;
           
   default:
-    return MEMS_ERROR;
+    break;
   }
   
-  if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG1, value) )
-    return MEMS_ERROR;
-                  
-  return MEMS_SUCCESS;
+  L3G4200D_WriteReg(L3G4200D_CTRL_REG1, value);
 }
 
 
@@ -135,20 +123,15 @@ status_t L3G4200D_SetMode(L3G4200D_Mode_t md) {
 * Input          : X_ENABLE/X_DISABLE | Y_ENABLE/Y_DISABLE | Z_ENABLE/Z_DISABLE
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetAxis(L3G4200D_Axis_t axis) {
-  u8_t value;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG1, &value) )
-    return MEMS_ERROR;
-    
+void L3G4200D_SetAxis(uint8_t axis) {
+
+  uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG1);
   value &= 0xf8;
   value |= axis;
   
-  if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG1, value) )
-    return MEMS_ERROR;  
-  
-  return MEMS_SUCCESS;
+  L3G4200D_WriteReg(L3G4200D_CTRL_REG1, value);
 }
 
 
@@ -158,20 +141,15 @@ status_t L3G4200D_SetAxis(L3G4200D_Axis_t axis) {
 * Input          : FS_250/FS_500/FS_2000
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetFullScale(L3G4200D_Fullscale_t fs) {
-  u8_t value;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG4, &value) )
-    return MEMS_ERROR;
-                  
+void L3G4200D_SetFullScale(L3G4200D_Fullscale_t fs) {
+
+  uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG4);          
   value &= 0xCF;	
   value |= (fs<<L3G4200D_FS);
   
-  if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG4, value) )
-    return MEMS_ERROR;
-  
-  return MEMS_SUCCESS;
+  L3G4200D_WriteReg(L3G4200D_CTRL_REG4, value);
 }
 
 
@@ -181,20 +159,15 @@ status_t L3G4200D_SetFullScale(L3G4200D_Fullscale_t fs) {
 * Input          : ENABLE/DISABLE
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetBDU(State_t bdu) {
-  u8_t value;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG4, &value) )
-    return MEMS_ERROR;
- 
+void L3G4200D_SetBDU(State_t bdu) {
+
+  uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG4);
   value &= 0x7F;
   value |= (bdu<<L3G4200D_BDU);
 
-  if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG4, value) )
-    return MEMS_ERROR;
-
-  return MEMS_SUCCESS;
+  L3G4200D_WriteReg(L3G4200D_CTRL_REG4, value);
 }
 
 
@@ -204,20 +177,15 @@ status_t L3G4200D_SetBDU(State_t bdu) {
 * Input          : BLE_LSB / BLE_MSB
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetBLE(L3G4200D_Endianess_t ble) {
-  u8_t value;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG4, &value) )
-    return MEMS_ERROR;
-                  
+void L3G4200D_SetBLE(L3G4200D_Endianess_t ble) {
+ 
+  uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG4);
   value &= 0xBF;	
   value |= (ble<<L3G4200D_BLE);
   
-  if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG4, value) )
-    return MEMS_ERROR;
-  
-  return MEMS_SUCCESS;
+  L3G4200D_WriteReg(L3G4200D_CTRL_REG4, value);
 }
 
 
@@ -227,20 +195,15 @@ status_t L3G4200D_SetBLE(L3G4200D_Endianess_t ble) {
 * Input          : ENABLE/DISABLE
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_HPFEnable(State_t hpf) {
-  u8_t value;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG5, &value) )
-    return MEMS_ERROR;
-                  
+void L3G4200D_HPFEnable(State_t hpf) {
+
+  uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG5);        
   value &= 0xEF;
   value |= (hpf<<L3G4200D_HPEN);
   
-  if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG5, value) )
-    return MEMS_ERROR;
-  
-  return MEMS_SUCCESS;
+  L3G4200D_WriteReg(L3G4200D_CTRL_REG5, value);
 }
 
 
@@ -250,20 +213,15 @@ status_t L3G4200D_HPFEnable(State_t hpf) {
 * Input          : HPM_NORMAL_MODE_RES/HPM_REF_SIGNAL/HPM_NORMAL_MODE/HPM_AUTORESET_INT
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetHPFMode(L3G4200D_HPFMode_t hpf) {
-  u8_t value;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG2, &value) )
-    return MEMS_ERROR;
-                  
+void L3G4200D_SetHPFMode(L3G4200D_HPFMode_t hpf) {
+
+  uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG2);      
   value &= 0xCF;
   value |= (hpf<<L3G4200D_HPM);
   
-  if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG2, value) )
-    return MEMS_ERROR;
-  
-  return MEMS_SUCCESS;
+  L3G4200D_WriteReg(L3G4200D_CTRL_REG2, value);
 }
 
 
@@ -273,20 +231,15 @@ status_t L3G4200D_SetHPFMode(L3G4200D_HPFMode_t hpf) {
 * Input          : HPFCF_0,HPFCF_1,HPFCF_2... See Table 27 of the datasheet
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetHPFCutOFF(L3G4200D_HPFCutOffFreq_t hpf) {
-  u8_t value;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG2, &value) )
-    return MEMS_ERROR;
-                  
+void L3G4200D_SetHPFCutOFF(L3G4200D_HPFCutOffFreq_t hpf) {
+
+  uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG2);    
   value &= 0xF0;
   value |= (hpf<<L3G4200D_HPFC0);
   
-  if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG2, value) )
-    return MEMS_ERROR;
-  
-  return MEMS_SUCCESS;
+  L3G4200D_WriteReg(L3G4200D_CTRL_REG2, value);
   
 }
 
@@ -297,20 +250,15 @@ status_t L3G4200D_SetHPFCutOFF(L3G4200D_HPFCutOffFreq_t hpf) {
 * Input          : PUSH_PULL/OPEN_DRAIN
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetIntPinMode(L3G4200D_IntPinMode_t pm) {
-  u8_t value;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG3, &value) )
-    return MEMS_ERROR;
-                  
+void L3G4200D_SetIntPinMode(L3G4200D_IntPinMode_t pm) {
+
+  uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG3);
   value &= 0xEF;
   value |= (pm<<L3G4200D_PP_OD);
   
-  if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG3, value) )
-    return MEMS_ERROR;
-  
-  return MEMS_SUCCESS;
+  L3G4200D_WriteReg(L3G4200D_CTRL_REG3, value);
 }
 
 
@@ -322,20 +270,14 @@ status_t L3G4200D_SetIntPinMode(L3G4200D_IntPinMode_t pm) {
 * to enable Interrupt 1 or Bootsatus on interrupt 1 pin
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetInt1Pin(L3G4200D_Int1PinConf_t pinConf) {
-  u8_t value;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG3, &value) )
-    return MEMS_ERROR;
-                  
+void L3G4200D_SetInt1Pin(uint8_t pinConf) {
+  uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG3);   
   value &= 0x1F;
   value |= pinConf;
   
-  if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG3, value) )
-    return MEMS_ERROR;
-  
-  return MEMS_SUCCESS;
+  L3G4200D_WriteReg(L3G4200D_CTRL_REG3, value);
 }
 
 
@@ -348,20 +290,14 @@ status_t L3G4200D_SetInt1Pin(L3G4200D_Int1PinConf_t pinConf) {
                    L3G4200D_EMPTY_ON_INT2_ENABLE/DISABLE
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetInt2Pin(L3G4200D_Int2PinConf_t pinConf) {
-  u8_t value;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG3, &value) )
-    return MEMS_ERROR;
-                  
+void L3G4200D_SetInt2Pin(uint8_t pinConf) {
+  uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG3);
   value &= 0xF0;
   value |= pinConf;
   
-  if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG3, value) )
-    return MEMS_ERROR;
-  
-  return MEMS_SUCCESS;  
+  L3G4200D_WriteReg(L3G4200D_CTRL_REG3, value); 
 }
 
 
@@ -371,20 +307,14 @@ status_t L3G4200D_SetInt2Pin(L3G4200D_Int2PinConf_t pinConf) {
 * Input          : ENABLE/DISABLE
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_Int1LatchEnable(State_t latch) {
-  u8_t value;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_INT1_CFG, &value) )
-    return MEMS_ERROR;
-                  
+void L3G4200D_Int1LatchEnable(State_t latch) {
+  uint8_t value= L3G4200D_ReadReg(L3G4200D_INT1_CFG);          
   value &= 0xBF;
   value |= latch<<L3G4200D_LIR;
   
-  if( !L3G4200D_WriteReg(L3G4200D_INT1_CFG, value) )
-    return MEMS_ERROR;
-  
-  return MEMS_SUCCESS;
+  L3G4200D_WriteReg(L3G4200D_INT1_CFG, value);
 }
 
 
@@ -394,14 +324,10 @@ status_t L3G4200D_Int1LatchEnable(State_t latch) {
 * Input          : None
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_ResetInt1Latch(void) {
-  u8_t value;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_INT1_SRC, &value) )
-    return MEMS_ERROR;
-  
-  return MEMS_SUCCESS;
+void L3G4200D_ResetInt1Latch(void) {
+  L3G4200D_ReadReg(L3G4200D_INT1_SRC);
 }
 
 
@@ -411,16 +337,10 @@ status_t L3G4200D_ResetInt1Latch(void) {
 * Input          : AND/OR, INT1_LIR ZHIE_ENABLE/DISABLE | INT1_ZLIE_ENABLE/DISABLE...
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetIntConfiguration(L3G4200D_Int1Conf_t ic) {
-  u8_t value;
-  
-  value = ic;
-
-  if( !L3G4200D_WriteReg(L3G4200D_INT1_CFG, value) )
-    return MEMS_ERROR;
-
-  return MEMS_SUCCESS;
+void L3G4200D_SetIntConfiguration(uint8_t ic) {
+  L3G4200D_WriteReg(L3G4200D_INT1_CFG, ic);
 }
 
 
@@ -430,55 +350,40 @@ status_t L3G4200D_SetIntConfiguration(L3G4200D_Int1Conf_t ic) {
 * Input          : Threshold = [0,31]
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetInt1Threshold(L3G4200D_IntThsAxis axis, u16_t ths) {
-  u8_t value;
+void L3G4200D_SetInt1Threshold(L3G4200D_IntThsAxis axis, uint16_t ths) {
+  uint8_t value;
   
   switch (axis) {
     
     case L3G4200D_THS_X:
       //write the threshold LSB
-      value = (u8_t)( ths & 0x00ff); 
-      if( !L3G4200D_WriteReg(L3G4200D_INT1_THS_XL, value) )
-        return MEMS_ERROR;
-      
+      value = (uint8_t)( ths & 0x00ff); 
+      L3G4200D_WriteReg(L3G4200D_INT1_THS_XL, value);
       //write the threshold LSB
-      value = (u8_t)( ths >> 8); 
-      if( !L3G4200D_WriteReg(L3G4200D_INT1_THS_XH, value) )
-        return MEMS_ERROR;
-      
+      value = (uint8_t)( ths >> 8); 
+      L3G4200D_WriteReg(L3G4200D_INT1_THS_XH, value);
       break;
       
     case L3G4200D_THS_Y:
       //write the threshold LSB
-      value = (u8_t)( ths & 0x00ff); 
-      if( !L3G4200D_WriteReg(L3G4200D_INT1_THS_YL, value) )
-        return MEMS_ERROR;
-      
+      value = (uint8_t)( ths & 0x00ff); 
+      L3G4200D_WriteReg(L3G4200D_INT1_THS_YL, value);
       //write the threshold LSB
-      value = (u8_t)( ths >> 8); 
-      if( !L3G4200D_WriteReg(L3G4200D_INT1_THS_YH, value) )
-        return MEMS_ERROR;
-      
+      value = (uint8_t)( ths >> 8); 
+      L3G4200D_WriteReg(L3G4200D_INT1_THS_YH, value);
       break;
       
     case L3G4200D_THS_Z:
       //write the threshold LSB
-      value = (u8_t)( ths & 0x00ff); 
-      if( !L3G4200D_WriteReg(L3G4200D_INT1_THS_ZL, value) )
-        return MEMS_ERROR;
-      
+      value = (uint8_t)( ths & 0x00ff); 
+      L3G4200D_WriteReg(L3G4200D_INT1_THS_ZL, value);
       //write the threshold LSB
-      value = (u8_t)( ths >> 8); 
-      if( !L3G4200D_WriteReg(L3G4200D_INT1_THS_ZH, value) )
-        return MEMS_ERROR;
-      
-      break;     
-
-        
+      value = (uint8_t)( ths >> 8); 
+      L3G4200D_WriteReg(L3G4200D_INT1_THS_ZH, value);
+      break;   
   }
-
-  return MEMS_SUCCESS;
 }
 
 
@@ -488,16 +393,12 @@ status_t L3G4200D_SetInt1Threshold(L3G4200D_IntThsAxis axis, u16_t ths) {
 * Input          : Duration value
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetInt1Duration(L3G4200D_Int1Conf_t id) {
- 
-  if (id > 127)
-    return MEMS_ERROR;
-
-  if( !L3G4200D_WriteReg(L3G4200D_INT1_DURATION, id) )
-    return MEMS_ERROR;
-
-  return MEMS_SUCCESS;
+void L3G4200D_SetInt1Duration(uint8_t id) {
+  if (id <= 127) {
+	L3G4200D_WriteReg(L3G4200D_INT1_DURATION, id);
+  }
 }
 
 
@@ -507,44 +408,27 @@ status_t L3G4200D_SetInt1Duration(L3G4200D_Int1Conf_t id) {
 * Input          : 
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_FIFOModeEnable(L3G4200D_FifoMode_t fm) {
-  u8_t value;  
-  
+void L3G4200D_FIFOModeEnable(L3G4200D_FifoMode_t fm) {
+  uint8_t value;  
   if(fm == L3G4200D_FIFO_DISABLE) {
     
-    if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG5, &value) )
-      return MEMS_ERROR;
-                    
+    value= L3G4200D_ReadReg(L3G4200D_CTRL_REG5);           
     value &= 0xBF;    
-    
-    if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG5, value) )
-      return MEMS_ERROR;
-    
+    L3G4200D_WriteReg(L3G4200D_CTRL_REG5, value);
   }
   else {
     
-    if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG5, &value) )
-      return MEMS_ERROR;
-                    
+    value= L3G4200D_ReadReg(L3G4200D_CTRL_REG5);         
     value &= 0xBF;
     value |= MEMS_SET<<L3G4200D_FIFO_EN;
-    
-    if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG5, value) )
-      return MEMS_ERROR;
-    
-    
-    if( !L3G4200D_ReadReg(L3G4200D_FIFO_CTRL_REG, &value) )
-      return MEMS_ERROR;
-    
+    L3G4200D_WriteReg(L3G4200D_CTRL_REG5, value);
+    value= L3G4200D_ReadReg(L3G4200D_FIFO_CTRL_REG);
     value &= 0x1f;
     value |= (fm<<L3G4200D_FM0);
-    
-    if( !L3G4200D_WriteReg(L3G4200D_FIFO_CTRL_REG, value) )
-      return MEMS_ERROR;
+    L3G4200D_WriteReg(L3G4200D_FIFO_CTRL_REG, value);
   }
-
-  return MEMS_SUCCESS;
 }
 
 
@@ -554,23 +438,15 @@ status_t L3G4200D_FIFOModeEnable(L3G4200D_FifoMode_t fm) {
 * Input          : Watermark = [0,31]
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetWaterMark(u8_t wtm) {
-  u8_t value;
-  
-  if(wtm > 31)
-    return MEMS_ERROR;  
-  
-  if( !L3G4200D_ReadReg(L3G4200D_FIFO_CTRL_REG, &value) )
-    return MEMS_ERROR;
-                  
-  value &= 0xE0;
-  value |= wtm; 
-  
-  if( !L3G4200D_WriteReg(L3G4200D_FIFO_CTRL_REG, value) )
-    return MEMS_ERROR;
-  
-  return MEMS_SUCCESS;
+void L3G4200D_SetWaterMark(uint8_t wtm) {
+  if(wtm <= 31) {
+	uint8_t value= L3G4200D_ReadReg(L3G4200D_FIFO_CTRL_REG);     
+	value &= 0xE0;
+	value |= wtm; 
+	L3G4200D_WriteReg(L3G4200D_FIFO_CTRL_REG, value);
+  }
 }
 
 
@@ -580,12 +456,10 @@ status_t L3G4200D_SetWaterMark(u8_t wtm) {
 * Input          : None
 * Output         : status register buffer
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_GetSatusReg(u8_t* buff) {
-  if( !L3G4200D_ReadReg(L3G4200D_STATUS_REG, buff) )
-      return MEMS_ERROR;
-  
-  return MEMS_SUCCESS;  
+void L3G4200D_GetSatusReg(uint8_t* buff) {
+  *buff= L3G4200D_ReadReg(L3G4200D_STATUS_REG);
 }
 
 
@@ -596,36 +470,16 @@ status_t L3G4200D_GetSatusReg(u8_t* buff) {
 * Output         : Angular Rate Registers buffer
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-status_t L3G4200D_GetAngRateRaw(AxesRaw_t* buff) {
-  u8_t valueL;
-  u8_t valueH;
+void L3G4200D_GetAngRateRaw(int16_t* x, int16_t* y, int16_t* z) {
+  *x= L3G4200D_ReadReg(L3G4200D_OUT_X_L) << 8;
+  *x|= L3G4200D_ReadReg(L3G4200D_OUT_X_H);
   
+  *y= L3G4200D_ReadReg(L3G4200D_OUT_Y_L) << 8;
+  *y|= L3G4200D_ReadReg(L3G4200D_OUT_Y_H);
+  
+  *z= L3G4200D_ReadReg(L3G4200D_OUT_Z_L) << 8;
+  *z|= L3G4200D_ReadReg(L3G4200D_OUT_Z_H);
 
-  if( !L3G4200D_ReadReg(L3G4200D_OUT_X_L, &valueL) )
-      return MEMS_ERROR;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_OUT_X_H, &valueH) )
-      return MEMS_ERROR;
-  
-  buff->AXIS_X = (i16_t)( (valueH << 8) | valueL );
-  
-  if( !L3G4200D_ReadReg(L3G4200D_OUT_Y_L, &valueL) )
-      return MEMS_ERROR;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_OUT_Y_H, &valueH) )
-      return MEMS_ERROR;
-  
-  buff->AXIS_Y = (i16_t)( (valueH << 8) | valueL );
-  
-   if( !L3G4200D_ReadReg(L3G4200D_OUT_Z_L, &valueL) )
-      return MEMS_ERROR;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_OUT_Z_H, &valueH) )
-      return MEMS_ERROR;
-  
-  buff->AXIS_Z = (i16_t)( (valueH << 8) | valueL );
-  
-  return MEMS_SUCCESS;  
 }
 
 
@@ -635,13 +489,10 @@ status_t L3G4200D_GetAngRateRaw(AxesRaw_t* buff) {
 * Input          : None
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_GetInt1Src(u8_t* buff) {
-  
-  if( !L3G4200D_ReadReg(L3G4200D_INT1_SRC, buff) )
-    return MEMS_ERROR;
-  
-  return MEMS_SUCCESS;
+void L3G4200D_GetInt1Src(uint8_t* dat) {
+	*dat= L3G4200D_ReadReg(L3G4200D_INT1_SRC);
 }
 
 
@@ -651,13 +502,10 @@ status_t L3G4200D_GetInt1Src(u8_t* buff) {
 * Input          : None
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_GetFifoSourceReg(u8_t* buff) {
-  
-  if( !L3G4200D_ReadReg(L3G4200D_FIFO_SRC_REG, buff) )
-    return MEMS_ERROR;
-  
-  return MEMS_SUCCESS;
+void L3G4200D_GetFifoSourceReg(uint8_t* dat) {
+  *dat= L3G4200D_ReadReg(L3G4200D_FIFO_SRC_REG);
 }
 
 
@@ -668,43 +516,35 @@ status_t L3G4200D_GetFifoSourceReg(u8_t* buff) {
 * Input          : L3G4200D_NONE, L3G4200D_HPH, L3G4200D_LPF2, L3G4200D_HPFLPF2
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetOutputDataAndFifoFilters(L3G4200D_HPF_LPF2_Enable hpf){
-  u8_t value;
-  
+void L3G4200D_SetOutputDataAndFifoFilters(L3G4200D_HPF_LPF2_Enable hpf){
   //HPF
-  if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG5, &value) )
-    return MEMS_ERROR;
-  
+  uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG5);
   switch(hpf) {
     
   case L3G4200D_NONE:
-    value &= 0xfc;
+    value &= 0xFC;
     value |= 0x00; //hpen = x, Out_sel_1 = 0, Out_sel_0 = 0
     break;
     
   case L3G4200D_HPF:
-    value &= 0xfc;
+    value &= 0xFC;
     value |= 0x01; //hpen = x, Out_sel_1 = 0, Out_sel_0 = 1
     break;
 
   case L3G4200D_LPF2:
-    value &= 0xed;
+    value &= 0xED;
     value |= 0x02; //hpen = 0, Out_sel_1 = 1, Out_sel_0 = x
     break;    
    
   case L3G4200D_HPFLPF2:
-    value &= 0xed;
+    value &= 0xED;
     value |= 0x12; //hpen = 1, Out_sel_1 = 1, Out_sel_0 = x
     break;    
   }
   
-  if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG5, value) )
-    return MEMS_ERROR;
-  
-  
-  return MEMS_SUCCESS;
-  
+  L3G4200D_WriteReg(L3G4200D_CTRL_REG5, value);
 }
 
 
@@ -715,44 +555,37 @@ status_t L3G4200D_SetOutputDataAndFifoFilters(L3G4200D_HPF_LPF2_Enable hpf){
 * Input          : NONE, HPH, LPF2, HPFLPF2
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetInt1Filters(L3G4200D_HPF_LPF2_Enable hpf){
-  u8_t value;
-  
+void L3G4200D_SetInt1Filters(L3G4200D_HPF_LPF2_Enable hpf){
   //HPF
-  if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG5, &value) )
-    return MEMS_ERROR;
-  
+  uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG5);
+
   switch(hpf) {
     
   case L3G4200D_NONE:
-    value &= 0xf3;
+    value &= 0xF3;
     value |= 0x00<<L3G4200D_INT1_SEL0; //hpen = x, Int1_sel_1 = 0, Int1_sel_0 = 0
     break;
     
   case L3G4200D_HPF:
-    value &= 0xf3;
+    value &= 0xF3;
     value |= 0x01<<L3G4200D_INT1_SEL0; //hpen = x, Int1_sel_1 = 0, Int1_sel_0 = 1
     break;
 
   case L3G4200D_LPF2:
-    value &= 0xe7;
+    value &= 0xE7;
     value |= 0x02<<L3G4200D_INT1_SEL0; //hpen = 0, Int1_sel_1 = 1, Int1_sel_0 = x
     break;    
    
   case L3G4200D_HPFLPF2:
-    value &= 0xe7;
+    value &= 0xE7;
     value |= 0x01<<L3G4200D_HPEN;
     value |= 0x02<<L3G4200D_INT1_SEL0; //hpen = 1, Int1_sel_1 = 1, Int1_sel_0 = x
     break;    
   }
   
-  if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG5, value) )
-    return MEMS_ERROR;
-  
-  
-  return MEMS_SUCCESS;
-  
+  L3G4200D_WriteReg(L3G4200D_CTRL_REG5, value);
 }
 
 
@@ -762,19 +595,11 @@ status_t L3G4200D_SetInt1Filters(L3G4200D_HPF_LPF2_Enable hpf){
 * Input          : L3G4200D_SPI_3_WIRE, L3G4200D_SPI_4_WIRE
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+* Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 *******************************************************************************/
-status_t L3G4200D_SetSPIInterface(L3G4200D_SPIMode_t spi) {
-  u8_t value;
-  
-  if( !L3G4200D_ReadReg(L3G4200D_CTRL_REG4, &value) )
-    return MEMS_ERROR;
-                  
+void L3G4200D_SetSPIInterface(L3G4200D_SPIMode_t spi) {
+  uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG4); 
   value &= 0xFE;
   value |= spi<<L3G4200D_SIM;
-  
-  if( !L3G4200D_WriteReg(L3G4200D_CTRL_REG4, value) )
-    return MEMS_ERROR;
-  
-  
-  return MEMS_SUCCESS;
+  L3G4200D_WriteReg(L3G4200D_CTRL_REG4, value);
 }

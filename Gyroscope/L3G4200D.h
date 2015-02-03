@@ -3,24 +3,12 @@
 #ifndef __L3G4200D_DRIVER__H
 #define __L3G4200D_DRIVER__H
 
+#include <stdint.h>
+
 /* Includes ------------------------------------------------------------------*/
-/* Exported types ------------------------------------------------------------*/
 
-//these could change accordingly with the architecture
-
-#ifndef __ARCHDEP__TYPES
-#define __ARCHDEP__TYPES
-typedef unsigned char u8_t;
-typedef unsigned short int u16_t;
-typedef short int i16_t;
-typedef signed char i8_t;
-#endif /*__ARCHDEP__TYPES*/
-
-typedef u8_t L3G4200D_Int1PinConf_t;
-typedef u8_t L3G4200D_Int2PinConf_t;
-typedef u8_t L3G4200D_Int1Conf_t;
-typedef u8_t L3G4200D_Axis_t;
-
+#define I2C_COMMUNICATION       0
+#define SPI_COMMUNICATION       1
 /* Exported common structure --------------------------------------------------------*/
 
 #ifndef __SHARED__TYPES
@@ -35,12 +23,6 @@ typedef enum {
   MEMS_ENABLE				=		0x01,
   MEMS_DISABLE				=		0x00	
 } State_t;
-
-typedef struct {
-  i16_t AXIS_X;
-  i16_t AXIS_Y;
-  i16_t AXIS_Z;
-} AxesRaw_t;
 
 #endif /*__SHARED__TYPES*/
 
@@ -152,7 +134,7 @@ typedef enum {
 
 /**************CONTROL REGISTERS*****************/
 
-#define L3G4200D_MEMS_I2C_ADDRESS         0xD2
+#define L3G4200D_ADDRESS				0xD2
 
 /***************CTRL1***************/
 #define L3G4200D_CTRL_REG1				0x20
@@ -257,76 +239,75 @@ typedef enum {
 #define L3G4200D_OUT_Y_H					0x2B
 #define L3G4200D_OUT_Z_L					0x2C
 #define L3G4200D_OUT_Z_H					0x2D
-#define L3G4200D_STATUS_REG                              0x27
-#define L3G4200D_STATUS_REG_ZYXOR                        0x07    // 1	:	new data set has over written the previous one
+#define L3G4200D_STATUS_REG                             0x27
+#define L3G4200D_STATUS_REG_ZYXOR                       0x07    // 1	:	new data set has over written the previous one
 							// 0	:	no overrun has occurred (default)	
-#define L3G4200D_STATUS_REG_ZOR                          0x06    // 0	:	no overrun has occurred (default)
+#define L3G4200D_STATUS_REG_ZOR                         0x06    // 0	:	no overrun has occurred (default)
 							// 1	:	new Z-axis data has over written the previous one
-#define L3G4200D_STATUS_REG_YOR                          0x05    // 0	:	no overrun has occurred (default)
+#define L3G4200D_STATUS_REG_YOR                         0x05    // 0	:	no overrun has occurred (default)
 							// 1	:	new Y-axis data has over written the previous one
-#define L3G4200D_STATUS_REG_XOR                          0x04    // 0	:	no overrun has occurred (default)
+#define L3G4200D_STATUS_REG_XOR                         0x04    // 0	:	no overrun has occurred (default)
 							// 1	:	new X-axis data has over written the previous one
-#define L3G4200D_STATUS_REG_ZYXDA                        0x03    // 0	:	a new set of data is not yet avvious one
+#define L3G4200D_STATUS_REG_ZYXDA                       0x03    // 0	:	a new set of data is not yet avvious one
                                                         // 1	:	a new set of data is available 
-#define L3G4200D_STATUS_REG_ZDA                          0x02    // 0	:	a new data for the Z-Axis is not availvious one
+#define L3G4200D_STATUS_REG_ZDA                         0x02    // 0	:	a new data for the Z-Axis is not availvious one
                                                         // 1	:	a new data for the Z-Axis is available
-#define L3G4200D_STATUS_REG_YDA                          0x01    // 0	:	a new data for the Y-Axis is not available
+#define L3G4200D_STATUS_REG_YDA                         0x01    // 0	:	a new data for the Y-Axis is not available
                                                         // 1	:	a new data for the Y-Axis is available
 #define STATUS_REG_XDA                         			0x00    // 0	:	a new data for the X-Axis is not available
 
-#define L3G4200D_DATAREADY_BIT                           L3G4200D_STATUS_REG_ZYXDA
+#define L3G4200D_DATAREADY_BIT                          L3G4200D_STATUS_REG_ZYXDA
 
-#define L3G4200D_I_AM_L3G4200D			        0xD4
+#define L3G4200D_I_AM_L3G4200D							0xD4
 
 /*************GYROSCOPE FIFO CONTROL REGISTER**************/
-#define L3G4200D_FM0                                      BIT(5)
-#define L3G4200D_FIFO_CTRL_REG                            0x2E
-#define L3G4200D_FIFO_SRC_REG			          0x2F
+#define L3G4200D_FM0                                    BIT(5)
+#define L3G4200D_FIFO_CTRL_REG                          0x2E
+#define L3G4200D_FIFO_SRC_REG							0x2F
 
 /* Exported functions --------------------------------------------------------*/
 /**********Sensor Configuration Functions***********/
-status_t L3G4200D_SetODR(L3G4200D_ODR_t ov);
-status_t L3G4200D_SetMode(L3G4200D_Mode_t md);
-status_t L3G4200D_SetAxis(L3G4200D_Axis_t axis);
-status_t L3G4200D_SetFullScale(L3G4200D_Fullscale_t fs);
-status_t L3G4200D_SetBDU(State_t bdu);
-status_t L3G4200D_SetBLE(L3G4200D_Endianess_t ble);
-status_t L3G4200D_SetSPIInterface(L3G4200D_SPIMode_t spi);
+void L3G4200D_SetODR(L3G4200D_ODR_t);
+void L3G4200D_SetMode(L3G4200D_Mode_t);
+void L3G4200D_SetAxis(uint8_t);
+void L3G4200D_SetFullScale(L3G4200D_Fullscale_t);
+void L3G4200D_SetBDU(State_t);
+void L3G4200D_SetBLE(L3G4200D_Endianess_t);
+void L3G4200D_SetSPIInterface(L3G4200D_SPIMode_t);
 
 /***************Filtering Functions****************/
-status_t L3G4200D_SetHPFMode(L3G4200D_HPFMode_t hpf);
-status_t L3G4200D_SetHPFCutOFF(L3G4200D_HPFCutOffFreq_t hpf);status_t L3G4200D_HPFEnable(State_t hpf);
-status_t L3G4200D_SetOutputDataAndFifoFilters(L3G4200D_HPF_LPF2_Enable hpf);
-status_t L3G4200D_SetInt1Filters(L3G4200D_HPF_LPF2_Enable hpf);
+void L3G4200D_SetHPFMode(L3G4200D_HPFMode_t);
+void L3G4200D_SetHPFCutOFF(L3G4200D_HPFCutOffFreq_t);
+void L3G4200D_HPFEnable(State_t);
+void L3G4200D_SetOutputDataAndFifoFilters(L3G4200D_HPF_LPF2_Enable);
+void L3G4200D_SetInt1Filters(L3G4200D_HPF_LPF2_Enable);
 
 /***************Interrupt Functions****************/
-status_t L3G4200D_SetIntPinMode(L3G4200D_IntPinMode_t pm);
-status_t L3G4200D_SetInt1Pin(L3G4200D_Int1PinConf_t pinConf);
-status_t L3G4200D_SetInt2Pin(L3G4200D_Int2PinConf_t pinConf);
-status_t L3G4200D_Int1LatchEnable(State_t latch);
-status_t L3G4200D_ResetInt1Latch(void);
-status_t L3G4200D_SetIntConfiguration(L3G4200D_Int1Conf_t ic);
-status_t L3G4200D_SetInt1Threshold(L3G4200D_IntThsAxis axis, u16_t ths);
-status_t L3G4200D_SetInt1Duration(L3G4200D_Int1Conf_t id);
+void L3G4200D_SetIntPinMode(L3G4200D_IntPinMode_t);
+void L3G4200D_SetInt1Pin(uint8_t);
+void L3G4200D_SetInt2Pin(uint8_t);
+void L3G4200D_Int1LatchEnable(State_t);
+void L3G4200D_ResetInt1Latch(void);
+void L3G4200D_SetIntConfiguration(uint8_t);
+void L3G4200D_SetInt1Threshold(L3G4200D_IntThsAxis, uint16_t);
+void L3G4200D_SetInt1Duration(uint8_t);
 
 /*****************FIFO Functions******************/
-status_t L3G4200D_FIFOModeEnable(L3G4200D_FifoMode_t fm);
-status_t L3G4200D_SetWaterMark(u8_t wtm);
+void L3G4200D_FIFOModeEnable(L3G4200D_FifoMode_t);
+void L3G4200D_SetWaterMark(uint8_t);
 
 /****************Reading Functions*****************/
-status_t L3G4200D_GetSatusReg(u8_t* buff);
-status_t L3G4200D_GetAngRateRaw(AxesRaw_t* buff);
-status_t L3G4200D_GetFifoSourceReg(u8_t* buff);
-status_t L3G4200D_GetInt1Src(u8_t* buff);
+void L3G4200D_GetSatusReg(uint8_t*);
+void L3G4200D_GetAngRateRaw(int16_t*, int16_t*, int16_t*);
+void L3G4200D_GetFifoSourceReg(uint8_t*);
+void L3G4200D_GetInt1Src(uint8_t*);
 
 
 /*********************Generic*********************/
-u8_t L3G4200D_ReadReg(u8_t Reg, u8_t* Data);
-u8_t L3G4200D_WriteReg(u8_t WriteAddr, u8_t Data);
+uint8_t L3G4200D_ReadReg(uint8_t);
+void L3G4200D_WriteReg(uint8_t, uint8_t);
 
 #endif /* __L3G4200D_H */
-
-/******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/
 
 
 

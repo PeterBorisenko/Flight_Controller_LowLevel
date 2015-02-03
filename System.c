@@ -44,3 +44,9 @@ void prepareSystem()
          break;
      }
  }
+ 
+void prepareESC()
+{
+	ESC_dir&= ~((1 << FL_pin)|(1 << FR_pin)|(1 << BL_pin)|(1 << BR_pin));
+	ESC_dir|= (1 << FL_pin)|(1 << FR_pin)|(1 << BL_pin)|(1 << BR_pin); // ESC control pins are OUTs
+}

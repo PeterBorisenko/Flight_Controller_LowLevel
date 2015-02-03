@@ -13,7 +13,6 @@
 
 #define F_CPU 16000000UL
 #define BAUD 1200
-#define BAUD_CALC F_CPU/16/BAUD-1
 
 // USART States
 #define USART_IDLE  0x00
@@ -28,6 +27,7 @@
 #define ACK         0x05
 #define NACK        0x11
 
+// Data format
 typedef int16_t vect_t;
 #define DATA_WIDTH 2
 

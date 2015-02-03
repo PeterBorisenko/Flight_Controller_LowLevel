@@ -42,6 +42,7 @@
 #ifndef __ADXL345_H__
 #define __ADXL345_H__
 
+#include <stdint.h>
 /******************************************************************************/
 /************************ Communication Protocols *****************************/
 /******************************************************************************/
@@ -167,61 +168,67 @@
 /*! ADXL345 ID */
 #define ADXL345_ID		0xE5
 
+
+typedef struct {
+	int16_t AXIS_X;
+	int16_t AXIS_Y;
+	int16_t AXIS_Z;
+} AxesRaw_t;
 /******************************************************************************/
 /************************ Functions Declarations ******************************/
 /******************************************************************************/
 
 /*! Writes data into a register. */
-void ADXL345_SetRegisterValue(unsigned char registerAddress,
-			      unsigned char registerValue);
+void ADXL345_SetRegisterValue(uint8_t registerAddress,
+			      uint8_t registerValue);
 
 /*<! Reads the value of a register. */
-unsigned char ADXL345_GetRegisterValue(unsigned char registerAddress);
+uint8_t ADXL345_GetRegisterValue(uint8_t registerAddress);
 
 /*! Initializes the I2C peripheral and checks if the ADXL345 part is present. */
-unsigned char ADXL345_Init(void);
+uint8_t ADXL345_Init(void);
 
 /*! Places the device into standby/measure mode. */
-void ADXL345_SetPowerMode(unsigned char pwrMode);
+void ADXL345_SetPowerMode(uint8_t pwrMode);
 
 /*! Reads the output data of each axis. */
-void ADXL345_GetXyz(unsigned short* x,
-		    unsigned short* y,
-		    unsigned short* z);
+void ADXL345_GetXyz(int16_t* x,
+		    int16_t* y,
+		    int16_t* z);
 
 /*! Enables/disables the tap detection. */
-void ADXL345_SetTapDetection(unsigned char tapType,
-		             unsigned char tapAxes,
-			     unsigned char tapDur,
-                             unsigned char tapLatent,
-                             unsigned char tapWindow,
-                             unsigned char tapThresh,
-                             unsigned char tapInt);
+void ADXL345_SetTapDetection(uint8_t tapType,
+		             uint8_t tapAxes,
+			     uint8_t tapDur,
+                             uint8_t tapLatent,
+                             uint8_t tapWindow,
+                             uint8_t tapThresh,
+                             uint8_t tapInt);
 
 /*! Enables/disables the activity detection. */
-void ADXL345_SetActivityDetection(unsigned char actOnOff,
-				  unsigned char actAxes,
-				  unsigned char actAcDc,
-				  unsigned char actThresh,
-				  unsigned char actInt);
+void ADXL345_SetActivityDetection(uint8_t actOnOff,
+				  uint8_t actAxes,
+				  uint8_t actAcDc,
+				  uint8_t actThresh,
+				  uint8_t actInt);
 
 /*! Enables/disables the inactivity detection. */
-void ADXL345_SetInactivityDetection(unsigned char inactOnOff,
-				    unsigned char inactAxes,
-				    unsigned char inactAcDc,
-				    unsigned char inactThresh,
-				    unsigned char inactTime,
-				    unsigned char inactInt);
+void ADXL345_SetInactivityDetection(uint8_t inactOnOff,
+				    uint8_t inactAxes,
+				    uint8_t inactAcDc,
+				    uint8_t inactThresh,
+				    uint8_t inactTime,
+				    uint8_t inactInt);
 
 /*! Enables/disables the free-fall detection. */
-void ADXL345_SetFreeFallDetection(unsigned char ffOnOff,
-				  unsigned char ffThresh,
-				  unsigned char ffTime,
-				  unsigned char ffInt);
+void ADXL345_SetFreeFallDetection(uint8_t ffOnOff,
+				  uint8_t ffThresh,
+				  uint8_t ffTime,
+				  uint8_t ffInt);
 
 /*! Calibrates the accelerometer. */
-void ADXL345_SetOffset(unsigned char xOffset,
-		       unsigned char yOffset,
-		       unsigned char zOffset);
+void ADXL345_SetOffset(uint8_t xOffset,
+		       uint8_t yOffset,
+		       uint8_t zOffset);
 
 #endif	/*__ADXL345_H__*/

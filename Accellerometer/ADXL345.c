@@ -1,46 +1,3 @@
-/***************************************************************************//**
- *   @file   ADXL345.c
- *   @brief  Implementation of ADXL345 Driver.
- *   @author DBogdan (dragos.bogdan@analog.com)
-********************************************************************************
- * Copyright 2012(c) Analog Devices, Inc.
- *
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *  - Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  - Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- *  - Neither the name of Analog Devices, Inc. nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *  - The use of this software may or may not infringe the patent rights
- *    of one or more patent holders.  This license does not release you
- *    from the requirement that you obtain separate licenses from these
- *    patent holders to use this software.
- *  - Use of the software either in source or binary form, must be run
- *    on or directly connected to an Analog Devices Inc. component.
- *
- * THIS SOFTWARE IS PROVIDED BY ANALOG DEVICES "AS IS" AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, NON-INFRINGEMENT,
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL ANALOG DEVICES BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, INTELLECTUAL PROPERTY RIGHTS, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
-********************************************************************************
- *   SVN Revision: 684
-*******************************************************************************/
-
-/******************************************************************************/
 /***************************** Include Files **********************************/
 /******************************************************************************/
 #include "ADXL345.h"
@@ -49,7 +6,7 @@
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
 /******************************************************************************/
-unsigned char ADXL345_COMMUNICATION = 1;
+unsigned char ADXL345_COMMUNICATION = I2C_COMMUNICATION;
 /******************************************************************************/
 /************************ Functions Definitions *******************************/
 /******************************************************************************/
@@ -65,7 +22,7 @@ unsigned char ADXL345_COMMUNICATION = 1;
 void ADXL345_SetRegisterValue(unsigned char registerAddress, unsigned char registerValue)
 {
     unsigned char writeData[2] = {0, 0};
-    unsigned char slaveDeviceId = 0x01;
+    //unsigned char slaveDeviceId = ADXL345_SPI_ID;
 
     if(ADXL345_COMMUNICATION == SPI_COMMUNICATION)
     {
@@ -88,18 +45,18 @@ void ADXL345_SetRegisterValue(unsigned char registerAddress, unsigned char regis
  *
  * @return registerValue - Value of the register.
 *******************************************************************************/
-unsigned char ADXL345_GetRegisterValue(unsigned char registerAddress)
+uint8_t ADXL345_GetRegisterValue(unsigned char registerAddress)
 {
     unsigned char readData[2] = {0, 0};
     unsigned char writeData[2] = {0, 0};
     unsigned char registerValue = 0;
-    unsigned char slaveDeviceId = 0x01;
+    //unsigned char slaveDeviceId = 0x01;
 
     if(ADXL345_COMMUNICATION == SPI_COMMUNICATION)
     {
         readData[0] = 0x80 + registerAddress;
         readData[1] = 0;
-//        SPI_Read(slaveDeviceId, readData, 2);
+//        SPIread(slaveDeviceId, readData, 2);
         registerValue = readData[1];
     }
     else
@@ -107,7 +64,8 @@ unsigned char ADXL345_GetRegisterValue(unsigned char registerAddress)
         writeData[0] = registerAddress;
 		TWIstart();
 		TWIslaveRead(ADXL345_ADDRESS);
-        TWIbyteWrite(writeData);
+        TWIbyteWrite(writeData[0]);
+		TWIbyteWrite(writeData[1]);
         TWIread(ADXL345_ADDRESS, readData, 1);
         registerValue = readData[0];
     }
@@ -125,9 +83,9 @@ unsigned char ADXL345_GetRegisterValue(unsigned char registerAddress)
  *                           0x1 - I2C peripheral is initialized and ADXL345
  *                                 part is present.
 *******************************************************************************/
-unsigned char ADXL345_Init(void)
+uint8_t ADXL345_Init(void)
 {
-    unsigned char status = 1;
+    uint8_t status = 1;
 
     if(ADXL345_COMMUNICATION == SPI_COMMUNICATION)
     {
@@ -154,10 +112,10 @@ unsigned char ADXL345_Init(void)
  *
  * @return None.
 *******************************************************************************/
-void ADXL345_SetPowerMode(unsigned char pwrMode)
+void ADXL345_SetPowerMode(uint8_t pwrMode)
 {
-    unsigned char oldPowerCtl = 0;
-    unsigned char newPowerCtl = 0;
+    uint8_t oldPowerCtl = 0;
+    uint8_t newPowerCtl = 0;
     
     oldPowerCtl = ADXL345_GetRegisterValue(ADXL345_POWER_CTL);
     newPowerCtl = oldPowerCtl & ~ADXL345_PCTL_MEASURE;
@@ -174,9 +132,9 @@ void ADXL345_SetPowerMode(unsigned char pwrMode)
  *
  * @return None.
 *******************************************************************************/
-void ADXL345_GetXyz(unsigned short* x,
-                    unsigned short* y,
-                    unsigned short* z)
+void ADXL345_GetXyz(int16_t* x,
+                    int16_t* y,
+                    int16_t* z)
 {
     *x = ADXL345_GetRegisterValue(ADXL345_DATAX1) << 8;
     *x += ADXL345_GetRegisterValue(ADXL345_DATAX0);
@@ -211,20 +169,20 @@ void ADXL345_GetXyz(unsigned short* x,
  *
  * @return None.
 *******************************************************************************/
-void ADXL345_SetTapDetection(unsigned char tapType,
-                             unsigned char tapAxes,
-                             unsigned char tapDur,
-                             unsigned char tapLatent,
-                             unsigned char tapWindow,
-                             unsigned char tapThresh,
-                             unsigned char tapInt)
+void ADXL345_SetTapDetection(uint8_t tapType,
+                             uint8_t tapAxes,
+                             uint8_t tapDur,
+                             uint8_t tapLatent,
+                             uint8_t tapWindow,
+                             uint8_t tapThresh,
+                             uint8_t tapInt)
 {
-    unsigned char oldTapAxes    = 0;
-    unsigned char newTapAxes    = 0;
-    unsigned char oldIntMap     = 0;
-    unsigned char newIntMap     = 0;
-    unsigned char oldIntEnable  = 0;
-    unsigned char newIntEnable  = 0;
+    uint8_t oldTapAxes    = 0;
+    uint8_t newTapAxes    = 0;
+    uint8_t oldIntMap     = 0;
+    uint8_t newIntMap     = 0;
+    uint8_t oldIntEnable  = 0;
+    uint8_t newIntEnable  = 0;
     
     oldTapAxes = ADXL345_GetRegisterValue(ADXL345_TAP_AXES);
     newTapAxes = oldTapAxes & ~(ADXL345_TAP_X_EN |
@@ -267,18 +225,18 @@ void ADXL345_SetTapDetection(unsigned char tapType,
  *
  * @return None.
 *******************************************************************************/
-void ADXL345_SetActivityDetection(unsigned char actOnOff,
-                                  unsigned char actAxes,
-                                  unsigned char actAcDc,
-                                  unsigned char actThresh,
-                                  unsigned char actInt)
+void ADXL345_SetActivityDetection(uint8_t actOnOff,
+                                  uint8_t actAxes,
+                                  uint8_t actAcDc,
+                                  uint8_t actThresh,
+                                  uint8_t actInt)
 {
-    unsigned char oldActInactCtl    = 0;
-    unsigned char newActInactCtl    = 0;
-    unsigned char oldIntMap         = 0;
-    unsigned char newIntMap         = 0;
-    unsigned char oldIntEnable      = 0;
-    unsigned char newIntEnable      = 0;
+    uint8_t oldActInactCtl    = 0;
+    uint8_t newActInactCtl    = 0;
+    uint8_t oldIntMap         = 0;
+    uint8_t newIntMap         = 0;
+    uint8_t oldIntEnable      = 0;
+    uint8_t newIntEnable      = 0;
     
     oldActInactCtl = ADXL345_GetRegisterValue(ADXL345_INT_ENABLE);
     newActInactCtl = oldActInactCtl & ~(ADXL345_ACT_ACDC |
@@ -321,19 +279,19 @@ void ADXL345_SetActivityDetection(unsigned char actOnOff,
  *
  * @return None.
 *******************************************************************************/
-void ADXL345_SetInactivityDetection(unsigned char inactOnOff,
-                                    unsigned char inactAxes,
-                                    unsigned char inactAcDc,
-                                    unsigned char inactThresh,
-                                    unsigned char inactTime,
-                                    unsigned char inactInt)
+void ADXL345_SetInactivityDetection(uint8_t inactOnOff,
+                                    uint8_t inactAxes,
+                                    uint8_t inactAcDc,
+                                    uint8_t inactThresh,
+                                    uint8_t inactTime,
+                                    uint8_t inactInt)
 {
-    unsigned char oldActInactCtl    = 0;
-    unsigned char newActInactCtl    = 0;
-    unsigned char oldIntMap         = 0;
-    unsigned char newIntMap         = 0;
-    unsigned char oldIntEnable      = 0;
-    unsigned char newIntEnable      = 0;
+    uint8_t oldActInactCtl    = 0;
+    uint8_t newActInactCtl    = 0;
+    uint8_t oldIntMap         = 0;
+    uint8_t newIntMap         = 0;
+    uint8_t oldIntEnable      = 0;
+    uint8_t newIntEnable      = 0;
     
     oldActInactCtl = ADXL345_GetRegisterValue(ADXL345_INT_ENABLE);
     newActInactCtl = oldActInactCtl & ~(ADXL345_INACT_ACDC |
@@ -368,15 +326,15 @@ void ADXL345_SetInactivityDetection(unsigned char inactOnOff,
  *
  * @return None.
 *******************************************************************************/
-void ADXL345_SetFreeFallDetection(unsigned char ffOnOff,
-                                  unsigned char ffThresh,
-                                  unsigned char ffTime,
-                                  unsigned char ffInt)
+void ADXL345_SetFreeFallDetection(uint8_t ffOnOff,
+                                  uint8_t ffThresh,
+                                  uint8_t ffTime,
+                                  uint8_t ffInt)
 {
-    unsigned char oldIntMap     = 0;
-    unsigned char newIntMap     = 0;
-    unsigned char oldIntEnable  = 0;
-    unsigned char newIntEnable  = 0;
+    uint8_t oldIntMap     = 0;
+    uint8_t newIntMap     = 0;
+    uint8_t oldIntEnable  = 0;
+    uint8_t newIntEnable  = 0;
     
     ADXL345_SetRegisterValue(ADXL345_THRESH_FF, ffThresh);
     ADXL345_SetRegisterValue(ADXL345_TIME_FF, ffTime);
@@ -399,9 +357,9 @@ void ADXL345_SetFreeFallDetection(unsigned char ffOnOff,
  *
  * @return None.
 *******************************************************************************/
-void ADXL345_SetOffset(unsigned char xOffset,
-                       unsigned char yOffset,
-                       unsigned char zOffset)
+void ADXL345_SetOffset(uint8_t xOffset,
+                       uint8_t yOffset,
+                       uint8_t zOffset)
 {
     ADXL345_SetRegisterValue(ADXL345_OFSX, xOffset);
     ADXL345_SetRegisterValue(ADXL345_OFSY, yOffset);

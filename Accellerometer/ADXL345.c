@@ -44,7 +44,7 @@
 /***************************** Include Files **********************************/
 /******************************************************************************/
 #include "ADXL345.h"
-#include "TWI.h"
+#include "../Communication.h"
 
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
@@ -62,8 +62,7 @@ unsigned char ADXL345_COMMUNICATION = 1;
  *
  * @return None.
 ******************************************************************************/
-void ADXL345_SetRegisterValue(unsigned char registerAddress,
-                       unsigned char registerValue)
+void ADXL345_SetRegisterValue(unsigned char registerAddress, unsigned char registerValue)
 {
     unsigned char writeData[2] = {0, 0};
     unsigned char slaveDeviceId = 0x01;

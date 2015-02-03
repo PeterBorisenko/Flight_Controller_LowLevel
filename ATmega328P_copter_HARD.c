@@ -17,8 +17,9 @@
 #include "Macro.h"
 #include "Assign.h"
 #include "System.h"
-#include "TWI.h"
-#include "ADXL345.h"
+#include "Communication.h"
+#include "Accellerometer/ADXL345.h"
+//#include "Gyroscope/L3G4200D.h"
 
 volatile uint8_t receiveByteCount= DATA_WIDTH;
 
@@ -376,6 +377,8 @@ ISR (USART_RX_vect) {
         }
     	break;
     }
+	
+	
 }
 
 ISR(WDT_vect) {

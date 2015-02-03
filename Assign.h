@@ -60,13 +60,12 @@ typedef int16_t vect_t;
 #define BL_reg OCR2A
 #define BR_reg OCR2B
 
-
-// I2C
-
-
-
-// USART
-
+// Current Sensor Pins/Ports
+#define CS_port		PORTC
+#define CS_dir		DDRC
+#define CS_pin		PINC0
+#define CS_ADCmask	0xFF
+#define CS_DID		ADC0D
 
 
 #endif /* ASSIGN_H_ */

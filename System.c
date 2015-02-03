@@ -15,7 +15,7 @@ void prepareSystem()
 }
 
  void setPowerReduction() {
-     PRR|= (1 << PRTIM1)|(1 << PRSPI)|(1 << PRADC);
+     PRR|= (1 << PRTIM1)|(1 << PRSPI);
  }
 
  void prepareTimer(uint8_t tmr, uint8_t mode, uint8_t prescaler)
@@ -44,33 +44,3 @@ void prepareSystem()
          break;
      }
  }
-
- void prepareUSART(unsigned int ubrr)
- {
-//      DDRD|= (1 << PIND1);
-//      DDRD&= ~(1 << PIND0);
-     UBRR0H= (unsigned char) (ubrr >> 8);
-     UBRR0L= (unsigned char) ubrr;
-	 UCSR0C= (1 << USBS0)|(1 << UCSZ00)|(1 << UPM01); // Frame format: 8 data, 2 stop, parity even
-     UCSR0B= (1 << RXCIE0)|(1 << RXEN0)|(1 << TXEN0);
-     
- }
-
- void prepareESC()
- {
-     ESC_dir&= ~((1 << FL_pin)|(1 << FR_pin)|(1 << BL_pin)|(1 << BR_pin));
-     ESC_dir|= (1 << FL_pin)|(1 << FR_pin)|(1 << BL_pin)|(1 << BR_pin); // ESC control pins are OUTs
- }
- 
- void sendChar(uint8_t byteToSend)
- {
- 	while (!(UCSR0A & (1 << UDRE0)));
-    UDR0= byteToSend;
- }
-
-uint8_t receiveChar()
-{
-	return UDR0;
-}
-
- 

@@ -22,10 +22,13 @@
 #define RECEIVE_Y   0x04
 #define RECEIVE_Z   0x05
 
-// Frame parts
+// Message parts
 #define HEADER      0x1010
 #define ACK         0x05
 #define NACK        0x11
+#define ARMED		'A'
+#define FAULT		'F'
+#define ASK_STATUS	'S'
 
 // Data format
 typedef int16_t vect_t;

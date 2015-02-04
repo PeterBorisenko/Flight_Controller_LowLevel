@@ -112,26 +112,6 @@ typedef enum {
   L3G4200D_THS_Z                         =                0x02
 } L3G4200D_IntThsAxis;
 
-/* Exported macro ------------------------------------------------------------*/
-
-#ifndef __SHARED__MACROS
-
-#define __SHARED__MACROS
-#define ValBit(VAR,Place)         (VAR & (1<<Place))
-#define BIT(x) ( (x) )
-
-#endif /*__SHARED__MACROS*/
-
-/* Exported constants --------------------------------------------------------*/
-
-#ifndef __SHARED__CONSTANTS
-#define __SHARED__CONSTANTS
-
-#define MEMS_SET                                        0x01
-#define MEMS_RESET                                      0x00
-
-#endif /*__SHARED__CONSTANTS*/
-
 /**************CONTROL REGISTERS*****************/
 
 #define L3G4200D_ADDRESS				0xD2

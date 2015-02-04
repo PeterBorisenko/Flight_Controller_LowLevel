@@ -23,8 +23,6 @@
 
 volatile uint8_t receiveByteCount= DATA_WIDTH;
 
-#define GYRO_ADDR       0x01
-
 #define wGyro           5 // wGyro is a factor of trust Gyroscope. Test it in a range: 5...20
 
 volatile static uint8_t FLAGS= 0x00;
@@ -166,10 +164,6 @@ void readAccellerometer() {
 //     temp= TWIbyteRead();
 //     A_measured_vect_Z= (temp << 8)|(TWIbyteRead());
 //     TWIstop();
-}
-
-void getCurrentImuData() {
-	
 }
 
 volatile vect_t filtr(vect_t curr_val, vect_t prev_val) {

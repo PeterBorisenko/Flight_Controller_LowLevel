@@ -21,14 +21,19 @@
 #define RECEIVE_X   0x03
 #define RECEIVE_Y   0x04
 #define RECEIVE_Z   0x05
+#define RECEIVE_ROT	0x06
+#define RECEIVE_RSP	0x07
+#define USART_ASKED	0x10
+#define USART_ASKS	0x11
+#define SEND_STAT	0x12
 
 // Message parts
 #define HEADER      0x1010
-#define ACK         0x05
-#define NACK        0x11
-#define ARMED		'A'
-#define FAULT		'F'
-#define ASK_STATUS	'S'
+#define ACK         0x20
+#define NACK        0x21
+#define ARMED		0x30
+#define FAULT		0x31
+#define ASK_STATUS	0x32
 
 // Data format
 typedef int16_t vect_t;
@@ -64,11 +69,12 @@ typedef int16_t vect_t;
 #define BR_reg OCR2B
 
 // Current Sensor Pins/Ports
-#define CS_port		PORTC
-#define CS_dir		DDRC
-#define CS_pin		PINC0
-#define CS_ADCmask	0xFF
-#define CS_DID		ADC0D
+#define CS_port			PORTC
+#define CS_dir			DDRC
+#define CS_pin			PINC0
+#define CS_ADCmask		0xFF
+#define CS_DID			ADC0D
+#define CS_FILTER_COUNT	0x05;
 
 
 #endif /* ASSIGN_H_ */

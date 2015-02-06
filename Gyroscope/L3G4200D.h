@@ -70,155 +70,155 @@ typedef enum {
 } L3G4200D_HPFCutOffFreq_t;
 
 typedef enum {
-  L3G4200D_PUSH_PULL                     =		0x00,
-  L3G4200D_OPEN_DRAIN                    =                0x01  
+  L3G4200D_PUSH_PULL                    =				0x00,
+  L3G4200D_OPEN_DRAIN                   =               0x01  
 } L3G4200D_IntPinMode_t;
 
 typedef enum {
-  L3G4200D_FULLSCALE_250                 	=               0x00,
-  L3G4200D_FULLSCALE_500                 	=               0x01,
-  L3G4200D_FULLSCALE_2000               	=               0x02	
+  L3G4200D_FULLSCALE_250                =               0x00,
+  L3G4200D_FULLSCALE_500                =               0x01,
+  L3G4200D_FULLSCALE_2000               =               0x02	
 } L3G4200D_Fullscale_t;
 
 typedef enum {
-  L3G4200D_BLE_LSB			=		0x00,
-  L3G4200D_BLE_MSB			=		0x01
+  L3G4200D_BLE_LSB						=				0x00,
+  L3G4200D_BLE_MSB						=				0x01
 } L3G4200D_Endianess_t;
 
 typedef enum {
-  L3G4200D_SPI_4_WIRE                     =               0x00,
-  L3G4200D_SPI_3_WIRE                     =               0x01
+  L3G4200D_SPI_4_WIRE                   =				0x00,
+  L3G4200D_SPI_3_WIRE                   =				0x01
 } L3G4200D_SPIMode_t;
 
 typedef enum {
-  L3G4200D_FIFO_DISABLE                  =               0x05,
-  L3G4200D_FIFO_BYPASS_MODE              =               0x00,
-  L3G4200D_FIFO_MODE                     =               0x01,
-  L3G4200D_FIFO_STREAM_MODE              =               0x02,
-  L3G4200D_FIFO_STREAM_TO_FIFO_MODE      =               0x03,
-  L3G4200D_FIFO_BYPASS_TO_STREAM_MODE    =               0x04    
+  L3G4200D_FIFO_DISABLE                 =				0x05,
+  L3G4200D_FIFO_BYPASS_MODE             =				0x00,
+  L3G4200D_FIFO_MODE                    =				0x01,
+  L3G4200D_FIFO_STREAM_MODE             =				0x02,
+  L3G4200D_FIFO_STREAM_TO_FIFO_MODE     =				0x03,
+  L3G4200D_FIFO_BYPASS_TO_STREAM_MODE   =				0x04    
 } L3G4200D_FifoMode_t;
 
 typedef enum {
-  L3G4200D_NONE                          =               0x00,
-  L3G4200D_HPF                           =               0x01,
-  L3G4200D_LPF2                          =               0x02,
-  L3G4200D_HPFLPF2                       =               0x03
+  L3G4200D_NONE                         =				0x00,
+  L3G4200D_HPF                          =				0x01,
+  L3G4200D_LPF2                         =				0x02,
+  L3G4200D_HPFLPF2                      =				0x03
 } L3G4200D_HPF_LPF2_Enable;
 
 typedef enum {
-  L3G4200D_THS_X                         =                0x00,
-  L3G4200D_THS_Y                         =                0x01,  
-  L3G4200D_THS_Z                         =                0x02
+  L3G4200D_THS_X                        =				0x00,
+  L3G4200D_THS_Y                        =				0x01,  
+  L3G4200D_THS_Z                        =				0x02
 } L3G4200D_IntThsAxis;
 
 /**************CONTROL REGISTERS*****************/
 
-#define L3G4200D_ADDRESS				0xD2
+#define L3G4200D_ADDRESS								0xD2
 
 /***************CTRL1***************/
-#define L3G4200D_CTRL_REG1				0x20
-#define L3G4200D_ODR_BIT                                BIT(4)
-#define L3G4200D_PD					BIT(3)
-#define L3G4200D_ZEN					BIT(2)
-#define L3G4200D_YEN					BIT(1)
-#define L3G4200D_XEN					BIT(0)
-#define L3G4200D_X_ENABLE                                 0x02
-#define L3G4200D_Y_ENABLE                                 0x01
-#define L3G4200D_Z_ENABLE                                 0x04
+#define L3G4200D_CTRL_REG1								0x20
+#define L3G4200D_ODR_BIT								4
+#define L3G4200D_PD										3
+#define L3G4200D_ZEN									2
+#define L3G4200D_YEN									1
+#define L3G4200D_XEN									0
+#define L3G4200D_X_ENABLE                               0x02
+#define L3G4200D_Y_ENABLE                               0x01
+#define L3G4200D_Z_ENABLE                               0x04
 
 /***************CTRL2***************/
-#define L3G4200D_CTRL_REG2				0x21
-#define L3G4200D_HPM					BIT(4)
-#define L3G4200D_HPFC3					BIT(3)
-#define L3G4200D_HPFC2					BIT(2)
-#define L3G4200D_HPFC1					BIT(1)
-#define L3G4200D_HPFC0					BIT(0)
+#define L3G4200D_CTRL_REG2								0x21
+#define L3G4200D_HPM									4
+#define L3G4200D_HPFC3									3
+#define L3G4200D_HPFC2									2
+#define L3G4200D_HPFC1									1
+#define L3G4200D_HPFC0									0
 
 /***************CTRL3***************/
-#define L3G4200D_CTRL_REG3				0x22
-#define L3G4200D_I1_INT					BIT(7)
-#define L3G4200D_I1_BOOT				BIT(6)
-#define L3G4200D_H_LACTIVE				BIT(5)
-#define L3G4200D_PP_OD					BIT(4)
-#define L3G4200D_I2_DRDY				BIT(3)
-#define L3G4200D_I2_WTM					BIT(2)
-#define L3G4200D_I2_ORUN				BIT(1)
-#define L3G4200D_I2_EMPTY				BIT(0)
-#define L3G4200D_I1_ON_PIN_INT1_ENABLE                   0x80
-#define L3G4200D_I1_ON_PIN_INT1_DISABLE                  0x00
-#define L3G4200D_I1_BOOT_ON_INT1_ENABLE                  0x40
-#define L3G4200D_I1_BOOT_ON_INT1_DISABLE                 0x00
-#define L3G4200D_INT1_ACTIVE_HIGH                        0x00
-#define L3G4200D_INT1_ACTIVE_LOW                         0x20
-#define L3G4200D_I2_DRDY_ON_INT2_ENABLE                  0x08
-#define L3G4200D_I2_DRDY_ON_INT2_DISABLE                 0x00
-#define L3G4200D_WTM_ON_INT2_ENABLE                      0x04
-#define L3G4200D_WTM_ON_INT2_DISABLE                     0x00
-#define L3G4200D_OVERRUN_ON_INT2_ENABLE                  0x02
-#define L3G4200D_OVERRUN_ON_INT2_DISABLE                 0x00
-#define L3G4200D_EMPTY_ON_INT2_ENABLE                    0x01
-#define L3G4200D_EMPTY_ON_INT2_DISABLE                   0x00
+#define L3G4200D_CTRL_REG3								0x22
+#define L3G4200D_I1_INT									7
+#define L3G4200D_I1_BOOT								6
+#define L3G4200D_H_LACTIVE								5
+#define L3G4200D_PP_OD									4
+#define L3G4200D_I2_DRDY								3
+#define L3G4200D_I2_WTM									2
+#define L3G4200D_I2_ORUN								1
+#define L3G4200D_I2_EMPTY								0
+#define L3G4200D_I1_ON_PIN_INT1_ENABLE                  0x80
+#define L3G4200D_I1_ON_PIN_INT1_DISABLE                 0x00
+#define L3G4200D_I1_BOOT_ON_INT1_ENABLE                 0x40
+#define L3G4200D_I1_BOOT_ON_INT1_DISABLE                0x00
+#define L3G4200D_INT1_ACTIVE_HIGH                       0x00
+#define L3G4200D_INT1_ACTIVE_LOW                        0x20
+#define L3G4200D_I2_DRDY_ON_INT2_ENABLE                 0x08
+#define L3G4200D_I2_DRDY_ON_INT2_DISABLE                0x00
+#define L3G4200D_WTM_ON_INT2_ENABLE                     0x04
+#define L3G4200D_WTM_ON_INT2_DISABLE                    0x00
+#define L3G4200D_OVERRUN_ON_INT2_ENABLE                 0x02
+#define L3G4200D_OVERRUN_ON_INT2_DISABLE                0x00
+#define L3G4200D_EMPTY_ON_INT2_ENABLE                   0x01
+#define L3G4200D_EMPTY_ON_INT2_DISABLE                  0x00
 
 /***************CTRL4***************/
-#define L3G4200D_CTRL_REG4				0x23
-#define L3G4200D_BDU					BIT(7)
-#define L3G4200D_BLE					BIT(6)
-#define L3G4200D_FS					BIT(4)
-#define L3G4200D_SIM					BIT(0)
+#define L3G4200D_CTRL_REG4								0x23
+#define L3G4200D_BDU									7
+#define L3G4200D_BLE									6
+#define L3G4200D_FS										4
+#define L3G4200D_SIM									0
 
 /***************CTRL5***************/
-#define L3G4200D_CTRL_REG5			         0x24
-#define L3G4200D_FIFO_EN                                 BIT(6)
-#define L3G4200D_HPEN                                    BIT(4)
-#define L3G4200D_INT1_SEL1                               BIT(3)
-#define L3G4200D_INT1_SEL0                               BIT(2)
-#define L3G4200D_OUT_SEL1                                BIT(1)
-#define L3G4200D_OUT_SEL0                                BIT(0)
+#define L3G4200D_CTRL_REG5								0x24
+#define L3G4200D_FIFO_EN                                6
+#define L3G4200D_HPEN                                   4
+#define L3G4200D_INT1_SEL1                              3
+#define L3G4200D_INT1_SEL0                              2
+#define L3G4200D_OUT_SEL1                               1
+#define L3G4200D_OUT_SEL0                               0
 
 /**************GYROSCOPE INTERRUPT REGISTERS***************/
-#define L3G4200D_INT1_CFG				0x30
-#define L3G4200D_INT1_SRC				0x31
-#define L3G4200D_INT1_THS_XH				0x32
-#define L3G4200D_INT1_THS_XL				0x33
-#define L3G4200D_INT1_THS_YH				0x34
-#define L3G4200D_INT1_THS_YL				0x35
-#define L3G4200D_INT1_THS_ZH				0x36
-#define L3G4200D_INT1_THS_ZL				0x37
-#define L3G4200D_INT1_DURATION				0x38
-#define L3G4200D_LIR                                     BIT(6)
-#define L3G4200D_ANDOR                                   BIT(7)
-#define L3G4200D_ZHIE                                    BIT(5)
-#define L3G4200D_ZLIE                                    BIT(4)
-#define L3G4200D_YHIE                                    BIT(3)
-#define L3G4200D_YLIE                                    BIT(2)
-#define L3G4200D_XHIE                                    BIT(1)
-#define L3G4200D_XLIE                                    BIT(0)
-#define L3G4200D_INT1_AND                                0x80
-#define L3G4200D_INT1_OR                                 0x00
-#define L3G4200D_INT1_LIR_ENABLE                         0x40
-#define L3G4200D_INT1_LIR_DISABLE                        0x00
-#define L3G4200D_INT1_ZHIE_ENABLE                        0x20
-#define L3G4200D_INT1_ZHIE_DISABLE                       0x00
-#define L3G4200D_INT1_ZLIE_ENABLE                        0x10
-#define L3G4200D_INT1_ZLIE_DISABLE                       0x00
-#define L3G4200D_INT1_YHIE_ENABLE                        0x08
-#define L3G4200D_INT1_YHIE_DISABLE                       0x00
-#define L3G4200D_INT1_YLIE_ENABLE                        0x04
-#define L3G4200D_INT1_YLIE_DISABLE                       0x00
-#define L3G4200D_INT1_XHIE_ENABLE                        0x02
-#define L3G4200D_INT1_XHIE_DISABLE                       0x00
-#define L3G4200D_INT1_XLIE_ENABLE                        0x01
-#define L3G4200D_INT1_XLIE_DISABLE                       0x00
+#define L3G4200D_INT1_CFG								0x30
+#define L3G4200D_INT1_SRC								0x31
+#define L3G4200D_INT1_THS_XH							0x32
+#define L3G4200D_INT1_THS_XL							0x33
+#define L3G4200D_INT1_THS_YH							0x34
+#define L3G4200D_INT1_THS_YL							0x35
+#define L3G4200D_INT1_THS_ZH							0x36
+#define L3G4200D_INT1_THS_ZL							0x37
+#define L3G4200D_INT1_DURATION							0x38
+#define L3G4200D_LIR                                    6
+#define L3G4200D_ANDOR                                  7
+#define L3G4200D_ZHIE                                   5
+#define L3G4200D_ZLIE                                   4
+#define L3G4200D_YHIE                                   3
+#define L3G4200D_YLIE                                   2
+#define L3G4200D_XHIE                                   1
+#define L3G4200D_XLIE                                   0
+#define L3G4200D_INT1_AND                               0x80
+#define L3G4200D_INT1_OR                                0x00
+#define L3G4200D_INT1_LIR_ENABLE                        0x40
+#define L3G4200D_INT1_LIR_DISABLE                       0x00
+#define L3G4200D_INT1_ZHIE_ENABLE                       0x20
+#define L3G4200D_INT1_ZHIE_DISABLE                      0x00
+#define L3G4200D_INT1_ZLIE_ENABLE                       0x10
+#define L3G4200D_INT1_ZLIE_DISABLE                      0x00
+#define L3G4200D_INT1_YHIE_ENABLE                       0x08
+#define L3G4200D_INT1_YHIE_DISABLE                      0x00
+#define L3G4200D_INT1_YLIE_ENABLE                       0x04
+#define L3G4200D_INT1_YLIE_DISABLE                      0x00
+#define L3G4200D_INT1_XHIE_ENABLE                       0x02
+#define L3G4200D_INT1_XHIE_DISABLE                      0x00
+#define L3G4200D_INT1_XLIE_ENABLE                       0x01
+#define L3G4200D_INT1_XLIE_DISABLE                      0x00
 
 /**********GYROSCOPE: STATUS AND OUTPUT REGISTERS***********/
 //OUTPUT REGISTER
-#define L3G4200D_OUT_X_L					0x28
-#define L3G4200D_OUT_X_H					0x29
-#define L3G4200D_OUT_Y_L					0x2A
-#define L3G4200D_OUT_Y_H					0x2B
-#define L3G4200D_OUT_Z_L					0x2C
-#define L3G4200D_OUT_Z_H					0x2D
+#define L3G4200D_OUT_X_L								0x28
+#define L3G4200D_OUT_X_H								0x29
+#define L3G4200D_OUT_Y_L								0x2A
+#define L3G4200D_OUT_Y_H								0x2B
+#define L3G4200D_OUT_Z_L								0x2C
+#define L3G4200D_OUT_Z_H								0x2D
 #define L3G4200D_STATUS_REG                             0x27
 #define L3G4200D_STATUS_REG_ZYXOR                       0x07    // 1	:	new data set has over written the previous one
 							// 0	:	no overrun has occurred (default)	
@@ -241,7 +241,7 @@ typedef enum {
 #define L3G4200D_I_AM_L3G4200D							0xD4
 
 /*************GYROSCOPE FIFO CONTROL REGISTER**************/
-#define L3G4200D_FM0                                    BIT(5)
+#define L3G4200D_FM0                                    5
 #define L3G4200D_FIFO_CTRL_REG                          0x2E
 #define L3G4200D_FIFO_SRC_REG							0x2F
 

@@ -1,15 +1,16 @@
-/* Includes ------------------------------------------------------------------*/
-#include "L3G4200D.h"
+// Includes ------------------------------------------------------------------
+ #include "L3G4200D.h"
+ #include "../Macro.h"
 #include "../Communication.h"
 
 unsigned char L3G4200D_COMMUNICATION = I2C_COMMUNICATION;
-/*******************************************************************************
+/******************************************************************************
 * Function Name		: L3G4200D_ReadReg
 * Description		: Generic Reading function.				
 * Input				: Register Address
 * Output			: None
 * Return			: Data Read
-*******************************************************************************/
+******************************************************************************/
 uint8_t L3G4200D_ReadReg(uint8_t registerAddress) {
   uint8_t readData[2] = {0, 0};
   uint8_t writeData[2] = {0, 0};
@@ -37,13 +38,13 @@ uint8_t L3G4200D_ReadReg(uint8_t registerAddress) {
   return(registerValue);
 }
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name		: L3G4200D_WriteReg
 * Description		: Generic Writing function.
 * Input				: Register Address, Data to be written
 * Output			: None
 * Return			: None
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_WriteReg(uint8_t registerAddress, uint8_t registerValue) {
     
   unsigned char writeData[2] = {0, 0};
@@ -62,17 +63,16 @@ void L3G4200D_WriteReg(uint8_t registerAddress, uint8_t registerValue) {
 	  TWIwrite(L3G4200D_ADDRESS, writeData, 2);
   }
 }
-/* Private functions ---------------------------------------------------------*/
+ //Private functions ---------------------------------------------------------
 
-
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetODR
 * Description    : Sets L3G4200D Output Data Rate
 * Input          : Output Data Rate
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetODR(L3G4200D_ODR_t ov){
 	uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG1);
 	value &= 0x0f;
@@ -81,14 +81,14 @@ void L3G4200D_SetODR(L3G4200D_ODR_t ov){
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetMode
 * Description    : Sets L3G4200D Operating Mode
 * Input          : Modality (NORMAL, SLEEP, POWER_DOWN)
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetMode(L3G4200D_Mode_t md) {
 
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG1);  
@@ -96,17 +96,20 @@ void L3G4200D_SetMode(L3G4200D_Mode_t md) {
   
   case L3G4200D_POWER_DOWN:		
     value &= 0xF7;
-    value |= (MEMS_RESET<<L3G4200D_PD);
+    BIT_clear(value, L3G4200D_PD); // previously: value|= (0 << L3G4200D_PD);
     break;
           
   case L3G4200D_NORMAL:
     value &= 0xF7;
-    value |= (MEMS_SET<<L3G4200D_PD);
+    BIT_set(value, L3G4200D_PD);
     break;
           
   case L3G4200D_SLEEP:		
     value &= 0xF0;
-    value |= ( (MEMS_SET<<L3G4200D_PD) | (MEMS_RESET<<L3G4200D_ZEN) | (MEMS_RESET<<L3G4200D_YEN) | (MEMS_RESET<<L3G4200D_XEN) );
+    BIT_set(value, L3G4200D_PD);
+	BIT_clear(value, L3G4200D_ZEN);
+	BIT_clear(value, L3G4200D_YEN);
+	BIT_clear(value, L3G4200D_XEN);
     break;
           
   default:
@@ -117,14 +120,14 @@ void L3G4200D_SetMode(L3G4200D_Mode_t md) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetAxis
 * Description    : Enable/Disable L3G4200D Axis
 * Input          : X_ENABLE/X_DISABLE | Y_ENABLE/Y_DISABLE | Z_ENABLE/Z_DISABLE
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetAxis(uint8_t axis) {
 
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG1);
@@ -135,14 +138,14 @@ void L3G4200D_SetAxis(uint8_t axis) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetFullScale
 * Description    : Sets the L3G4200D FullScale
 * Input          : FS_250/FS_500/FS_2000
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetFullScale(L3G4200D_Fullscale_t fs) {
 
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG4);          
@@ -153,14 +156,14 @@ void L3G4200D_SetFullScale(L3G4200D_Fullscale_t fs) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetBDU
 * Description    : Enable/Disable Block Data Update Functionality
 * Input          : ENABLE/DISABLE
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetBDU(State_t bdu) {
 
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG4);
@@ -171,14 +174,14 @@ void L3G4200D_SetBDU(State_t bdu) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetBLE
 * Description    : Set Endianess (MSB/LSB)
 * Input          : BLE_LSB / BLE_MSB
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetBLE(L3G4200D_Endianess_t ble) {
  
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG4);
@@ -189,14 +192,14 @@ void L3G4200D_SetBLE(L3G4200D_Endianess_t ble) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_HPFEnable
 * Description    : Enable/Disable High Pass Filter
 * Input          : ENABLE/DISABLE
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_HPFEnable(State_t hpf) {
 
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG5);        
@@ -207,14 +210,14 @@ void L3G4200D_HPFEnable(State_t hpf) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetHPFMode
 * Description    : Set High Pass Filter Modality
 * Input          : HPM_NORMAL_MODE_RES/HPM_REF_SIGNAL/HPM_NORMAL_MODE/HPM_AUTORESET_INT
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetHPFMode(L3G4200D_HPFMode_t hpf) {
 
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG2);      
@@ -225,14 +228,14 @@ void L3G4200D_SetHPFMode(L3G4200D_HPFMode_t hpf) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetHPFCutOFF
 * Description    : Set High Pass CUT OFF Freq
 * Input          : HPFCF_0,HPFCF_1,HPFCF_2... See Table 27 of the datasheet
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetHPFCutOFF(L3G4200D_HPFCutOffFreq_t hpf) {
 
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG2);    
@@ -244,14 +247,14 @@ void L3G4200D_SetHPFCutOFF(L3G4200D_HPFCutOffFreq_t hpf) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetIntPinMode
 * Description    : Set Interrupt Pin Modality (push pull or Open drain)
 * Input          : PUSH_PULL/OPEN_DRAIN
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetIntPinMode(L3G4200D_IntPinMode_t pm) {
 
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG3);
@@ -262,7 +265,7 @@ void L3G4200D_SetIntPinMode(L3G4200D_IntPinMode_t pm) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetInt1Pin
 * Description    : Set Interrupt1 pin Function
 * Input          : L3G4200D_I1_ON_PIN_INT1_ENABLE | L3G4200D_I1_BOOT_ON_INT1 | L3G4200D_INT1_ACTIVE_HIGH
@@ -271,7 +274,7 @@ void L3G4200D_SetIntPinMode(L3G4200D_IntPinMode_t pm) {
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetInt1Pin(uint8_t pinConf) {
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG3);   
   value &= 0x1F;
@@ -281,7 +284,7 @@ void L3G4200D_SetInt1Pin(uint8_t pinConf) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetInt2Pin
 * Description    : Set Interrupt2 pin Function
 * Input          : L3G4200D_I2_DRDY_ON_INT2_ENABLE/DISABLE | 
@@ -291,7 +294,7 @@ void L3G4200D_SetInt1Pin(uint8_t pinConf) {
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetInt2Pin(uint8_t pinConf) {
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG3);
   value &= 0xF0;
@@ -301,14 +304,14 @@ void L3G4200D_SetInt2Pin(uint8_t pinConf) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_Int1LatchEnable
 * Description    : Enable Interrupt 1 Latching function
 * Input          : ENABLE/DISABLE
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_Int1LatchEnable(State_t latch) {
   uint8_t value= L3G4200D_ReadReg(L3G4200D_INT1_CFG);          
   value &= 0xBF;
@@ -318,40 +321,40 @@ void L3G4200D_Int1LatchEnable(State_t latch) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_ResetInt1Latch
 * Description    : Reset Interrupt 1 Latching function
 * Input          : None
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_ResetInt1Latch(void) {
   L3G4200D_ReadReg(L3G4200D_INT1_SRC);
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetIntConfiguration
 * Description    : Interrupt 1 Configuration
 * Input          : AND/OR, INT1_LIR ZHIE_ENABLE/DISABLE | INT1_ZLIE_ENABLE/DISABLE...
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetIntConfiguration(uint8_t ic) {
   L3G4200D_WriteReg(L3G4200D_INT1_CFG, ic);
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetInt1Threshold
 * Description    : Sets Interrupt 1 Threshold
 * Input          : Threshold = [0,31]
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetInt1Threshold(L3G4200D_IntThsAxis axis, uint16_t ths) {
   uint8_t value;
   
@@ -387,7 +390,7 @@ void L3G4200D_SetInt1Threshold(L3G4200D_IntThsAxis axis, uint16_t ths) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetInt1Duration
 * Description    : Sets Interrupt 1 Duration
 * Input          : Duration value
@@ -402,14 +405,14 @@ void L3G4200D_SetInt1Duration(uint8_t id) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_FIFOModeEnable
 * Description    : Sets Fifo Modality
 * Input          : 
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_FIFOModeEnable(L3G4200D_FifoMode_t fm) {
   uint8_t value;  
   if(fm == L3G4200D_FIFO_DISABLE) {
@@ -422,7 +425,7 @@ void L3G4200D_FIFOModeEnable(L3G4200D_FifoMode_t fm) {
     
     value= L3G4200D_ReadReg(L3G4200D_CTRL_REG5);         
     value &= 0xBF;
-    value |= MEMS_SET<<L3G4200D_FIFO_EN;
+    BIT_set(value, L3G4200D_FIFO_EN);
     L3G4200D_WriteReg(L3G4200D_CTRL_REG5, value);
     value= L3G4200D_ReadReg(L3G4200D_FIFO_CTRL_REG);
     value &= 0x1f;
@@ -432,14 +435,14 @@ void L3G4200D_FIFOModeEnable(L3G4200D_FifoMode_t fm) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetWaterMark
 * Description    : Sets Watermark Value
 * Input          : Watermark = [0,31]
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetWaterMark(uint8_t wtm) {
   if(wtm <= 31) {
 	uint8_t value= L3G4200D_ReadReg(L3G4200D_FIFO_CTRL_REG);     
@@ -450,26 +453,26 @@ void L3G4200D_SetWaterMark(uint8_t wtm) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_GetSatusReg
 * Description    : Read the status register
 * Input          : None
 * Output         : status register buffer
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_GetSatusReg(uint8_t* buff) {
   *buff= L3G4200D_ReadReg(L3G4200D_STATUS_REG);
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_GetAngRateRaw
 * Description    : Read the Angular Rate Registers
 * Input          : None
 * Output         : Angular Rate Registers buffer
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_GetAngRateRaw(int16_t* x, int16_t* y, int16_t* z) {
   *x= L3G4200D_ReadReg(L3G4200D_OUT_X_L) << 8;
   *x|= L3G4200D_ReadReg(L3G4200D_OUT_X_H);
@@ -483,33 +486,33 @@ void L3G4200D_GetAngRateRaw(int16_t* x, int16_t* y, int16_t* z) {
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_GetInt1Src
 * Description    : Reset Interrupt 1 Latching function
 * Input          : None
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_GetInt1Src(uint8_t* dat) {
 	*dat= L3G4200D_ReadReg(L3G4200D_INT1_SRC);
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_GetFifoSourceReg
 * Description    : Read Fifo source Register
 * Input          : None
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_GetFifoSourceReg(uint8_t* dat) {
   *dat= L3G4200D_ReadReg(L3G4200D_FIFO_SRC_REG);
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetOutputDataAndFifoFilters
 * Description    : ENABLE/DISABLE HIGH PASS and LOW PASS filters applied to output and fifo registers
 *                : See Table 8 of AN3393 for more details
@@ -517,7 +520,7 @@ void L3G4200D_GetFifoSourceReg(uint8_t* dat) {
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetOutputDataAndFifoFilters(L3G4200D_HPF_LPF2_Enable hpf){
   //HPF
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG5);
@@ -548,7 +551,7 @@ void L3G4200D_SetOutputDataAndFifoFilters(L3G4200D_HPF_LPF2_Enable hpf){
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetInt1Filters
 * Description    : ENABLE/DISABLE HIGH PASS and LOW PASS filters applied to Int1 circuitery
 *                : See Table 9 of AN3393 for more details
@@ -556,7 +559,7 @@ void L3G4200D_SetOutputDataAndFifoFilters(L3G4200D_HPF_LPF2_Enable hpf){
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetInt1Filters(L3G4200D_HPF_LPF2_Enable hpf){
   //HPF
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG5);
@@ -589,14 +592,14 @@ void L3G4200D_SetInt1Filters(L3G4200D_HPF_LPF2_Enable hpf){
 }
 
 
-/*******************************************************************************
+/******************************************************************************
 * Function Name  : L3G4200D_SetSPIInterface
 * Description    : Set SPI mode: 3 Wire Interface OR 4 Wire Interface
 * Input          : L3G4200D_SPI_3_WIRE, L3G4200D_SPI_4_WIRE
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
-*******************************************************************************/
+******************************************************************************/
 void L3G4200D_SetSPIInterface(L3G4200D_SPIMode_t spi) {
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG4); 
   value &= 0xFE;

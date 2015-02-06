@@ -17,9 +17,6 @@
 #include "Macro.h"
 #include "Assign.h"
 #include "System.h"
-#include "Communication.h"
-#include "Accellerometer/ADXL345.h"
-#include "Gyroscope/L3G4200D.h"
 
 volatile uint8_t receiveByteCount= DATA_WIDTH;
 
@@ -118,52 +115,22 @@ volatile static Previous_t * Previous;
 static A_measured_t * A_measured;
 Thrust_t * Thrust;
 
+volatile static adc_t * CSMeasured;
+volatile static uint16_t CSfiltered; // Needed to prevent false reaction and improve noise immunity
+uint32_t CSFilterBuffer;
+uint8_t	CSFilterIndex= CS_FILTER_COUNT;
+
 void error( uint8_t affectedModule )
 {
     //TODO: Error processing
 }
-
-void prepareAccellerometer() {
-    uint8_t status= ADXL345_Init();
-	if (!status) {
-		//module fault or module not exist
-	}
-	ADXL345_SetPowerMode(0x01);
-}
-
-void prepareGyro() {
-	//set ODR (turn ON device)
-	L3G4200D_SetODR(L3G4200D_ODR_95Hz_BW_25);
-	//set PowerMode
-	L3G4200D_SetMode(L3G4200D_NORMAL);
-	//set Fullscale
-	L3G4200D_SetFullScale(L3G4200D_FULLSCALE_250);
-	//set axis Enable
-	L3G4200D_SetAxis(L3G4200D_X_ENABLE | L3G4200D_Y_ENABLE | L3G4200D_Z_ENABLE);
-}
-
-
 
 void readGyro() {
 	L3G4200D_GetAngRateRaw(&G_measured->X, &G_measured->Y, &G_measured->Z);
 }
 
 void readAccellerometer() {
-	
 	ADXL345_GetXyz(&A_measured->X, &A_measured->Y, &A_measured->Z);
-	
-//     TWIstart();
-//     TWIslaveWrite(ACCEL_ADDR);
-//     TWIbyteWrite(A_DATAXH);
-//     TWIstart();
-//     TWIslaveRead(ACCEL_ADDR);
-//     uint8_t temp= TWIbyteRead();
-//     A_measured_vect_X= (temp << 8)|(TWIbyteRead());
-//     temp= TWIbyteRead();
-//     A_measured_vect_Y= (temp << 8)|(TWIbyteRead());
-//     temp= TWIbyteRead();
-//     A_measured_vect_Z= (temp << 8)|(TWIbyteRead());
-//     TWIstop();
 }
 
 volatile vect_t filtr(vect_t curr_val, vect_t prev_val) {
@@ -250,18 +217,33 @@ void makeDecision() {
         setThrust(&BR_reg, CONSTRAIN(++Thrust->BR, 0, 255));
         setThrust(&BR_reg, CONSTRAIN(++Thrust->BL, 0, 255));
     }
+	// TODO: Z ROTATION!!!
 }
 
-int main(void)
+void CSMeasure() {
+	startCurrentMeasure(CS_ADCmask, CSMeasured);
+}
+
+void CSFilter() {
+	// TODO: Implement
+	if (CSMeasured->state)
+	{
+		CSFilterBuffer+= CSMeasured->value;
+	}
+	if(!CSFilterIndex--) {
+		CSfiltered= CSFilterBuffer/CS_FILTER_COUNT;
+		CSFilterIndex= CS_FILTER_COUNT;
+	}
+	
+}
+
+int main(void) // TODO: Make Z rotation possible
 {
     prepareSystem();
     prepareTimer(0,0, PSC_0_64);
     prepareTimer(2,0, PSC_2_64);
     
     prepareUSART(BAUD_DIVIDER(BAUD));
-    
-    prepareESC();
-	prepareAccellerometer();
     sei();
 
     while(1)
@@ -366,6 +348,7 @@ ISR(TIMER1_OVF_vect){ // System TIMER
 
 }
 
+// USART Message Protocol
 ISR (USART_RX_vect) {
     switch (USART_STATE)
     {
@@ -425,6 +408,12 @@ ISR (USART_RX_vect) {
             USART_STATE= USART_IDLE;
         }
     	break;
+	case RECEIVE_ROT:
+
+	break;
+	case RECEIVE_RSP:
+
+	break;
     }
 	
 	
@@ -432,4 +421,8 @@ ISR (USART_RX_vect) {
 
 ISR(WDT_vect) {
     ESC_port&= ~((1 << BL_pin)|(1 << BR_pin)|(1 << FL_pin)|(1 << FR_pin)); // Shut down Engines If SYSTEM_FAULT =)
+}
+
+ISR(ADC_vect) {
+	adcGetData(adc_t result);
 }

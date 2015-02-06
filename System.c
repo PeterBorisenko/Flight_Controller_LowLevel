@@ -12,6 +12,9 @@ void prepareSystem()
     WDTCSR|= (1 << WDE)|(1 << WDIE);
     //WDTCSR|=(0b111 << WDP0);
     setPowerReduction();
+    prepareAccellerometer();
+	prepareGyro();
+	prepareESC();
 }
 
  void setPowerReduction() {
@@ -49,4 +52,28 @@ void prepareESC()
 {
 	ESC_dir&= ~((1 << FL_pin)|(1 << FR_pin)|(1 << BL_pin)|(1 << BR_pin));
 	ESC_dir|= (1 << FL_pin)|(1 << FR_pin)|(1 << BL_pin)|(1 << BR_pin); // ESC control pins are OUTs
+}
+
+void prepareAccellerometer() {
+	uint8_t status= ADXL345_Init();
+	if (!status) {
+		//module fault or module not exist
+	}
+	ADXL345_SetPowerMode(0x01);
+}
+
+void prepareGyro() {
+	//set ODR (turn ON device)
+	L3G4200D_SetODR(L3G4200D_ODR_95Hz_BW_25);
+	//set PowerMode
+	L3G4200D_SetMode(L3G4200D_NORMAL);
+	//set Fullscale
+	L3G4200D_SetFullScale(L3G4200D_FULLSCALE_250);
+	//set axis Enable
+	L3G4200D_SetAxis(L3G4200D_X_ENABLE | L3G4200D_Y_ENABLE | L3G4200D_Z_ENABLE);
+}
+
+void prepareCurrentSens() {
+	adcInit(ADC_PSC_8, ADC_REFER_AVCC, 1, 0);
+	adcDigInDisable(CS_DID);
 }

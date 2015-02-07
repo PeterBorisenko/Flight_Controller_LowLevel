@@ -12,7 +12,7 @@ void prepareSystem()
     WDTCSR|= (1 << WDE)|(1 << WDIE);
     //WDTCSR|=(0b111 << WDP0);
     setPowerReduction();
-    prepareAccellerometer();
+    prepareAccelerometer();
 	prepareGyro();
 	prepareESC();
 }
@@ -54,7 +54,7 @@ void prepareESC()
 	ESC_dir|= (1 << FL_pin)|(1 << FR_pin)|(1 << BL_pin)|(1 << BR_pin); // ESC control pins are OUTs
 }
 
-void prepareAccellerometer() {
+void prepareAccelerometer() {
 	uint8_t status= ADXL345_Init();
 	if (!status) {
 		//module fault or module not exist

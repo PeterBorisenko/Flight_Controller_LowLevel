@@ -10,8 +10,9 @@
 #include <stdint.h>
 #include "Assign.h"
 #include "Communication.h"
-#include "Accellerometer/ADXL345.h"
+#include "Accelerometer/ADXL345.h"
 #include "Gyroscope/L3G4200D.h"
+#include "Current/ACS758.h"
 
 void setPowerReduction();
 void prepareTimer(uint8_t, uint8_t, uint8_t);
@@ -22,7 +23,7 @@ void prepareUSART(unsigned int);
 
 void sendChar(uint8_t);
 uint8_t receiveChar();
-void prepareAccellerometer();
+void prepareAccelerometer();
 void prepareGyro();
 void prepareCurrentSens();
 #endif /*SYSTEM_H*/

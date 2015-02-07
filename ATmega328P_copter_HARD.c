@@ -16,6 +16,7 @@
 
 #include "Macro.h"
 #include "Assign.h"
+#include "ADC_mega328.h"
 #include "System.h"
 
 volatile uint8_t receiveByteCount= DATA_WIDTH;
@@ -31,73 +32,6 @@ volatile static uint8_t USART_STATE= USART_IDLE;
 
 typedef struct
 {
-	// Vector instructions from control system
-	vect_t X;
-	vect_t Y;
-	vect_t Z;	
-} Received_t;
-
-
-typedef struct
-{
-	// Stored vector instructions
-	vect_t X;
-	vect_t Y;
-	vect_t Z;
-} Required_t;
-
-
-typedef struct
-{
-	// Accellerometer measure vars
-	vect_t X;
-	vect_t Y;
-	vect_t Z;
-} A_measured_t;
-
-typedef struct
-{
-	// Accellerometer filtered vars
-	vect_t X;
-	vect_t Y;
-	vect_t Z;
-} A_filtered_t;
-
-typedef struct
-{
-	// Gyroscope measure vars
-	vect_t X;
-	vect_t Y;
-	vect_t Z;
-} G_measured_t;
-
-typedef struct
-{
-	// Vector normalised
-	vect_t X;
-	vect_t Y;
-	vect_t Z;
-} Norm_t;
-
-typedef struct  
-{
-	// Full Calculation results (Gyro-compensated Accellerometer)
-	vect_t X;
-	vect_t Y;
-	vect_t Z;
-} Current_t;
-
-typedef struct
-{
-	// Previous measured (calculated) vector values
-	vect_t X;
-	vect_t Y;
-	vect_t Z;
-} Previous_t;
-
-
-typedef struct
-{
 	// Stored thrust
 	uint8_t FL;
 	uint8_t FR;
@@ -105,14 +39,14 @@ typedef struct
 	uint8_t BR;
 } Thrust_t;
 
-volatile static Received_t * Received;
-volatile static Required_t * Required;
-volatile static A_filtered_t * A_filtered;
-volatile static G_measured_t * G_measured;
-volatile static Norm_t * Norm;
-volatile static Current_t * Current;
-volatile static Previous_t * Previous;
-static A_measured_t * A_measured;
+volatile static vect_t * Received;	// Vector instructions from control system
+volatile static vect_t * Required;	// Stored vector instructions
+volatile static vect_t * A_filtered;// Accelerometer filtered vars
+volatile static vect_t * G_measured;// Gyroscope measure vars
+volatile static vect_t * Norm;		// Full Calculation results (Gyro-compensated Accelerometer) 
+volatile static vect_t * Current;	// Full Calculation results (Gyro-compensated Accelerometer)
+volatile static vect_t * Previous;	// Previous measured (calculated) vector values
+static vect_t * A_measured;	// Accelerometer measure vars
 Thrust_t * Thrust;
 
 volatile static adc_t * CSMeasured;
@@ -129,7 +63,7 @@ void readGyro() {
 	L3G4200D_GetAngRateRaw(&G_measured->X, &G_measured->Y, &G_measured->Z);
 }
 
-void readAccellerometer() {
+void readAccelerometer() {
 	ADXL345_GetXyz(&A_measured->X, &A_measured->Y, &A_measured->Z);
 }
 
@@ -150,7 +84,7 @@ void measure() {
         Previous->Y= A_filtered->Y;
         Previous->Z= A_filtered->Z;
 
-        readAccellerometer();
+        readAccelerometer();
         A_filtered->X= filtr(A_measured->X, Previous->X);
         A_filtered->Y= filtr(A_measured->Y, Previous->Y);
         A_filtered->Z= filtr(A_measured->Z, Previous->Z);
@@ -158,11 +92,11 @@ void measure() {
         BIT_set(FLAGS, IMU_DATA_READY);
 }
 
-void calculate() 
+void calculate()  //TODO: vector calcs must be in float
 {
     while(!BIT_read(FLAGS, IMU_DATA_READY));
     BIT_set(FLAGS, CALCULATING);
-    vect_t scalar= hypo3(A_filtered->X, A_filtered->Y, A_filtered->Z);
+    vect_t scalar= hypo3(A_filtered->X, A_filtered->Y, A_filtered->Z); 
     Norm->X= A_filtered->X/scalar;
     Norm->Y= A_filtered->Y/scalar;
     Norm->Z= A_filtered->Z/scalar;
@@ -180,7 +114,7 @@ void thrustOut() {
 	Thrust->FR= 0;
 }
 
-void makeDecision() {
+void makeDecision() { //TODO: vector comps must be in float
     if (Norm->X > Required->X) {
         setThrust(&FL_reg, CONSTRAIN(++(Thrust->FL), 0, 255));
         setThrust(&FR_reg, CONSTRAIN(++Thrust->FR, 0, 255));
@@ -225,7 +159,6 @@ void CSMeasure() {
 }
 
 void CSFilter() {
-	// TODO: Implement
 	if (CSMeasured->state)
 	{
 		CSFilterBuffer+= CSMeasured->value;
@@ -234,7 +167,6 @@ void CSFilter() {
 		CSfiltered= CSFilterBuffer/CS_FILTER_COUNT;
 		CSFilterIndex= CS_FILTER_COUNT;
 	}
-	
 }
 
 int main(void) // TODO: Make Z rotation possible
@@ -424,5 +356,5 @@ ISR(WDT_vect) {
 }
 
 ISR(ADC_vect) {
-	adcGetData(adc_t result);
+	adcGetData(CSMeasured);
 }

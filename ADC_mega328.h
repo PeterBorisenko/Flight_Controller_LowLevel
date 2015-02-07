@@ -20,7 +20,7 @@
 #define ADC_PSC_128			0x07
 
 typedef struct {
-	uint8_t state;
+	uint8_t state; // 0 if not ready, 1 if conversion completed
 	uint16_t value;
 } adc_t;
 

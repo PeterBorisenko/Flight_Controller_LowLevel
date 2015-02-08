@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 #include "Assign.h"
-#include "Communication.h"
+#include "Communication_mega328.h"
 #include "Accelerometer/ADXL345.h"
 #include "Gyroscope/L3G4200D.h"
 #include "Current/ACS758.h"

@@ -4,6 +4,9 @@
 #define __L3G4200D_DRIVER__H
 
 #include <stdint.h>
+#include "../Assign.h"
+#include "../Macro.h"
+#include "../Communication_mega328.h"
 
 /* Includes ------------------------------------------------------------------*/
 
@@ -277,10 +280,10 @@ void L3G4200D_FIFOModeEnable(L3G4200D_FifoMode_t);
 void L3G4200D_SetWaterMark(uint8_t);
 
 /****************Reading Functions*****************/
-void L3G4200D_GetSatusReg(uint8_t*);
-void L3G4200D_GetAngRateRaw(int16_t*, int16_t*, int16_t*);
-void L3G4200D_GetFifoSourceReg(uint8_t*);
-void L3G4200D_GetInt1Src(uint8_t*);
+void L3G4200D_GetSatusReg(uint8_t *);
+void L3G4200D_GetAngRateRaw(vect_t *);
+void L3G4200D_GetFifoSourceReg(uint8_t *);
+void L3G4200D_GetInt1Src(uint8_t *);
 
 
 /*********************Generic*********************/

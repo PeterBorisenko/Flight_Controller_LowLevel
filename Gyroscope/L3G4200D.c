@@ -1,7 +1,5 @@
 // Includes ------------------------------------------------------------------
  #include "L3G4200D.h"
- #include "../Macro.h"
-#include "../Communication.h"
 
 unsigned char L3G4200D_COMMUNICATION = I2C_COMMUNICATION;
 /******************************************************************************
@@ -473,15 +471,15 @@ void L3G4200D_GetSatusReg(uint8_t* buff) {
 * Output         : Angular Rate Registers buffer
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 ******************************************************************************/
-void L3G4200D_GetAngRateRaw(int16_t* x, int16_t* y, int16_t* z) {
-  *x= L3G4200D_ReadReg(L3G4200D_OUT_X_L) << 8;
-  *x|= L3G4200D_ReadReg(L3G4200D_OUT_X_H);
+void L3G4200D_GetAngRateRaw(vect_t * dat) {
+  dat->X= L3G4200D_ReadReg(L3G4200D_OUT_X_L) << 8;
+  dat->X|= L3G4200D_ReadReg(L3G4200D_OUT_X_H);
   
-  *y= L3G4200D_ReadReg(L3G4200D_OUT_Y_L) << 8;
-  *y|= L3G4200D_ReadReg(L3G4200D_OUT_Y_H);
+  dat->Y= L3G4200D_ReadReg(L3G4200D_OUT_Y_L) << 8;
+  dat->Y|= L3G4200D_ReadReg(L3G4200D_OUT_Y_H);
   
-  *z= L3G4200D_ReadReg(L3G4200D_OUT_Z_L) << 8;
-  *z|= L3G4200D_ReadReg(L3G4200D_OUT_Z_H);
+  dat->Z= L3G4200D_ReadReg(L3G4200D_OUT_Z_L) << 8;
+  dat->Z|= L3G4200D_ReadReg(L3G4200D_OUT_Z_H);
 
 }
 

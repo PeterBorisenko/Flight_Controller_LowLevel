@@ -22,8 +22,8 @@
 #define MR_DATA_NACK    0x58
 #define IDLE            0xF8
 
-#define READ            0x01
-#define WRITE           0x00
+#define TWI_READ            0x01
+#define TWI_WRITE           0x00
 
 // Functions
 

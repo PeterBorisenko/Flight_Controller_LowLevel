@@ -59,7 +59,7 @@ void TWIstop() {
 }
 
 void TWIslaveWrite(uint8_t addr) {
-    TWDR= ((addr << 1) | WRITE);                                    // Send command
+    TWDR= ((addr << 1) | TWI_WRITE);                                    // Send command
     TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
     while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
@@ -70,7 +70,7 @@ void TWIslaveWrite(uint8_t addr) {
  }
 
 void TWIslaveRead(uint8_t addr) {
-    TWDR= ((addr << 1) | READ);                                    // Send command
+    TWDR= ((addr << 1) | TWI_READ);                                    // Send command
     TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
     while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
@@ -128,7 +128,7 @@ uint8_t TWIbyteRead()
          //error(TWI);
      }
 #endif
-     TWDR= ((addr << 1) | WRITE);                                    // Send command
+     TWDR= ((addr << 1) | TWI_WRITE);                                    // Send command
      TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
      while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
@@ -136,7 +136,7 @@ uint8_t TWIbyteRead()
          //error(TWI);
      }
 #endif
-     for (int i= num; i >= 0; i--) {
+     for (int i= num; i > 0; i--) {
          TWDR= *dat;
          TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
          while (!BIT_read(TWCR, TWINT));
@@ -168,7 +168,7 @@ void TWIread(uint8_t addr, uint8_t * dat, uint8_t num)
          //error(TWI);
      }
 #endif
-     TWDR= ((addr << 1) | READ);                                    // Send command
+     TWDR= ((addr << 1) | TWI_READ);                                    // Send command
      TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
      while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
@@ -176,7 +176,7 @@ void TWIread(uint8_t addr, uint8_t * dat, uint8_t num)
          //error(TWI);
      }
 #endif
-     for (int i= num; i >= 0; i--) {
+     for (int i= num; i > 0; i--) {
          TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
          while (!BIT_read(TWCR, TWINT));
          if ((TWSTA & 0xF8) == MR_DATA_ACK) {

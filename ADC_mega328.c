@@ -1,18 +1,18 @@
 #include "ADC_mega328.h"
 
 
- adcInit(uint8_t adc_psc, uint8_t refer, uint8_t left, uint8_t sleepMode)
+ adcInit(uint8_t adcPrescaler, uint8_t reference, uint8_t leftAlign, uint8_t sleepMode)
 {
 	ADCSRA= 0; // Used for proper reinit being possible
-	if (adc_psc <= 0x07)
+	if (adcPrescaler <= 0x07)
 	{
-		ADCSRA|= (adc_psc << ADPS0);
+		ADCSRA|= (adcPrescaler << ADPS0);
 	}
-	if (refer <= 0x03)
+	if (reference <= 0x03)
 	{
-		ADMUX|= (refer << REFS0);
+		ADMUX|= (reference << REFS0);
 	}
-	if (left)
+	if (leftAlign)
 	{
 		BIT_set(ADMUX, ADLAR);
 	}

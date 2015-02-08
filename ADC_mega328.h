@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <avr/io.h>
 
+#include "Macro.h"
+
 #define ADC_REFER_AREF	0x00
 #define ADC_REFER_AVCC	0x01
 #define ADC_REFER_1V1	0x03
@@ -24,10 +26,10 @@ typedef struct {
 	uint16_t value;
 } adc_t;
 
-adcInit(uint8_t, uint8_t, uint8_t, uint8_t);
-adcSelectChannel(uint8_t);
-adcStart(adc_t *);
-adcGetData(adc_t *);
-adcStartAndSleep(adc_t *);
-adcGetDataAndWakeUp(adc_t *);
-adcDigInDisable(uint8_t);
+void adcInit(uint8_t, uint8_t, uint8_t, uint8_t);
+void adcSelectChannel(uint8_t);
+void adcStart(adc_t *);
+void adcGetData(adc_t *);
+void adcStartAndSleep(adc_t *);
+void adcGetDataAndWakeUp(adc_t *);
+void adcDigInDisable(uint8_t);

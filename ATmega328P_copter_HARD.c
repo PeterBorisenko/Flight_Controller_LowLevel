@@ -37,22 +37,47 @@ typedef struct
 	uint8_t FR;
 	uint8_t BL;
 	uint8_t BR;
+	int8_t Rot;
 } Thrust_t;
 
-volatile static vect_t * Received;	// Vector instructions from control system
-volatile static vect_t * Required;	// Stored vector instructions
-volatile static vect_t * A_filtered;// Accelerometer filtered vars
-volatile static vect_t * G_measured;// Gyroscope measure vars
-volatile static vect_t * Norm;		// Full Calculation results (Gyro-compensated Accelerometer) 
-volatile static vect_t * Current;	// Full Calculation results (Gyro-compensated Accelerometer)
-volatile static vect_t * Previous;	// Previous measured (calculated) vector values
-static vect_t * A_measured;	// Accelerometer measure vars
-Thrust_t * Thrust;
+// Variables
+volatile static int8_t Rotation; // Rotation: x < 0 - CCW, x > 0 - CW, x == 0 - No rotation;
+volatile static vect_t Received;
+volatile static vect_t Required;
+volatile static vect_t A_filtered;
+volatile static vect_t G_measured;
+volatile static vect_t Norm;
+volatile static vect_t Current;
+volatile static vect_t Previous;
+volatile static vect_t A_measured;
+Thrust_t Thrust;
+adc_t CS_measured;
 
-volatile static adc_t * CSMeasured;
+// Pointers
+volatile static vect_t * pReceived= &Received;	// Vector instructions from control system
+volatile static vect_t * pRequired= &Required;	// Stored vector instructions
+volatile static vect_t * pA_filtered= &A_filtered;// Accelerometer filtered vars
+volatile static vect_t * pG_measured= &G_measured;// Gyroscope measure vars
+volatile static vect_t * pNorm= &Norm;		// Full Calculation results (Gyro-compensated Accelerometer) 
+volatile static vect_t * pCurrent= &Current;	// Full Calculation results (Gyro-compensated Accelerometer)
+volatile static vect_t * pPrevious= &Previous;	// Previous measured (calculated) vector values
+volatile static vect_t * pA_measured= &A_measured;	// Accelerometer measure vars
+Thrust_t * pThrust= &Thrust;
+volatile static adc_t * pCS_measured= &CS_measured;
+
 volatile static uint16_t CSfiltered; // Needed to prevent false reaction and improve noise immunity
 uint32_t CSFilterBuffer;
 uint8_t	CSFilterIndex= CS_FILTER_COUNT;
+
+
+int16_t filtr(int16_t curr_val, int16_t prev_val, uint8_t mod) {
+	return ((curr_val + prev_val * mod)/(1 + mod));
+}
+
+int16_t hypo3(int16_t a, int16_t b, int16_t c )
+{
+	return sqrt(a*a + b*b + c*c);
+}
 
 void error( uint8_t affectedModule )
 {
@@ -60,34 +85,25 @@ void error( uint8_t affectedModule )
 }
 
 void readGyro() {
-	L3G4200D_GetAngRateRaw(&G_measured->X, &G_measured->Y, &G_measured->Z);
+	L3G4200D_GetAngRateRaw(pG_measured);
 }
 
 void readAccelerometer() {
-	ADXL345_GetXyz(&A_measured->X, &A_measured->Y, &A_measured->Z);
-}
-
-volatile vect_t filtr(vect_t curr_val, vect_t prev_val) {
-    return ((curr_val + prev_val * wGyro)/(1 + wGyro));
-}
-
-volatile vect_t hypo3( volatile vect_t a, volatile vect_t b, volatile vect_t c ) 
-{
-	return sqrt(a*a + b*b + c*c);
+	ADXL345_GetXyz(pA_measured);
 }
 
 void measure() {
         while(BIT_read(FLAGS, CALCULATING));
         BIT_clear(FLAGS, IMU_DATA_READY);
         // Prepare Recent Cycle Data
-        Previous->X= A_filtered->X;
-        Previous->Y= A_filtered->Y;
-        Previous->Z= A_filtered->Z;
+        pPrevious->X= pA_filtered->X;
+        pPrevious->Y= pA_filtered->Y;
+        pPrevious->Z= pA_filtered->Z;
 
         readAccelerometer();
-        A_filtered->X= filtr(A_measured->X, Previous->X);
-        A_filtered->Y= filtr(A_measured->Y, Previous->Y);
-        A_filtered->Z= filtr(A_measured->Z, Previous->Z);
+        pA_filtered->X= filtr(pA_measured->X, pPrevious->X, wGyro);
+        pA_filtered->Y= filtr(pA_measured->Y, pPrevious->Y, wGyro);
+        pA_filtered->Z= filtr(pA_measured->Z, pPrevious->Z, wGyro);
 
         BIT_set(FLAGS, IMU_DATA_READY);
 }
@@ -96,10 +112,10 @@ void calculate()  //TODO: vector calcs must be in float
 {
     while(!BIT_read(FLAGS, IMU_DATA_READY));
     BIT_set(FLAGS, CALCULATING);
-    vect_t scalar= hypo3(A_filtered->X, A_filtered->Y, A_filtered->Z); 
-    Norm->X= A_filtered->X/scalar;
-    Norm->Y= A_filtered->Y/scalar;
-    Norm->Z= A_filtered->Z/scalar;
+    int16_t scalar= hypo3(pA_filtered->X, pA_filtered->Y, pA_filtered->Z); 
+    pNorm->X= pA_filtered->X/scalar;
+    pNorm->Y= pA_filtered->Y/scalar;
+    pNorm->Z= pA_filtered->Z/scalar;
     BIT_clear(FLAGS, CALCULATING);
 }
 
@@ -108,60 +124,66 @@ static inline void setThrust(uint8_t * ESC_reg, uint8_t thrust) {
 }
 
 void thrustOut() {
-	Thrust->BL= 0;
-	Thrust->BR= 0;
-	Thrust->FL= 0;
-	Thrust->FR= 0;
+	pThrust->BL= 0;
+	pThrust->BR= 0;
+	pThrust->FL= 0;
+	pThrust->FR= 0;
 }
 
-void makeDecision() { //TODO: vector comps must be in float
-    if (Norm->X > Required->X) {
-        setThrust(&FL_reg, CONSTRAIN(++(Thrust->FL), 0, 255));
-        setThrust(&FR_reg, CONSTRAIN(++Thrust->FR, 0, 255));
-        setThrust(&BR_reg, CONSTRAIN(--Thrust->BR, 0, 255));
-        setThrust(&BL_reg, CONSTRAIN(--Thrust->BL, 0, 255));
+void makeDecision() { //TODO: vector comps must be in float?
+    if (pNorm->X > pRequired->X) {
+        setThrust(&FL_reg, CONSTRAIN(++(pThrust->FL), 0, 255));
+        setThrust(&FR_reg, CONSTRAIN(++pThrust->FR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(--pThrust->BR, 0, 255));
+        setThrust(&BL_reg, CONSTRAIN(--pThrust->BL, 0, 255));
     }
-    else if (Norm->X < Required->X) {
-        setThrust(&FL_reg, CONSTRAIN(--Thrust->FL, 0, 255));
-        setThrust(&FR_reg, CONSTRAIN(--Thrust->FR, 0, 255));
-        setThrust(&BR_reg, CONSTRAIN(++Thrust->BR, 0, 255));
-        setThrust(&BR_reg, CONSTRAIN(++Thrust->BL, 0, 255));
+    else if (pNorm->X < pRequired->X) {
+        setThrust(&FL_reg, CONSTRAIN(--pThrust->FL, 0, 255));
+        setThrust(&FR_reg, CONSTRAIN(--pThrust->FR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(++pThrust->BR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(++pThrust->BL, 0, 255));
     }
-    if (Norm->Y > Required->Y) {
-        setThrust(&FL_reg, CONSTRAIN(--Thrust->FL, 0, 255));
-        setThrust(&FR_reg, CONSTRAIN(++Thrust->FR, 0, 255));
-        setThrust(&BR_reg, CONSTRAIN(++Thrust->BR, 0, 255));
-        setThrust(&BL_reg, CONSTRAIN(--Thrust->BL, 0, 255));
+    if (pNorm->Y > pRequired->Y) {
+        setThrust(&FL_reg, CONSTRAIN(--pThrust->FL, 0, 255));
+        setThrust(&FR_reg, CONSTRAIN(++pThrust->FR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(++pThrust->BR, 0, 255));
+        setThrust(&BL_reg, CONSTRAIN(--pThrust->BL, 0, 255));
     }
-    else if (Norm->Y < Required->Y) {
-        setThrust(&FL_reg, CONSTRAIN(++Thrust->FL, 0, 255));
-        setThrust(&FR_reg, CONSTRAIN(--Thrust->FR, 0, 255));
-        setThrust(&BR_reg, CONSTRAIN(--Thrust->BR, 0, 255));
-        setThrust(&BR_reg, CONSTRAIN(++Thrust->BL, 0, 255));
+    else if (pNorm->Y < pRequired->Y) {
+        setThrust(&FL_reg, CONSTRAIN(++pThrust->FL, 0, 255));
+        setThrust(&FR_reg, CONSTRAIN(--pThrust->FR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(--pThrust->BR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(++pThrust->BL, 0, 255));
     }
-    if (Norm->Z > Required->Z) {
-        setThrust(&FL_reg, CONSTRAIN(--Thrust->FL, 0, 255));
-        setThrust(&FR_reg, CONSTRAIN(--Thrust->FR, 0, 255));
-        setThrust(&BR_reg, CONSTRAIN(--Thrust->BR, 0, 255));
-        setThrust(&BL_reg, CONSTRAIN(--Thrust->BL, 0, 255));
+    if (pNorm->Z > pRequired->Z) {
+        setThrust(&FL_reg, CONSTRAIN(--pThrust->FL, 0, 255));
+        setThrust(&FR_reg, CONSTRAIN(--pThrust->FR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(--pThrust->BR, 0, 255));
+        setThrust(&BL_reg, CONSTRAIN(--pThrust->BL, 0, 255));
     }
-    else if (Norm->Z < Required->Z) {
-        setThrust(&FL_reg, CONSTRAIN(++Thrust->FL, 0, 255));
-        setThrust(&FR_reg, CONSTRAIN(++Thrust->FR, 0, 255));
-        setThrust(&BR_reg, CONSTRAIN(++Thrust->BR, 0, 255));
-        setThrust(&BR_reg, CONSTRAIN(++Thrust->BL, 0, 255));
+    else if (pNorm->Z < pRequired->Z) {
+        setThrust(&FL_reg, CONSTRAIN(++pThrust->FL, 0, 255));
+        setThrust(&FR_reg, CONSTRAIN(++pThrust->FR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(++pThrust->BR, 0, 255));
+        setThrust(&BR_reg, CONSTRAIN(++pThrust->BL, 0, 255));
     }
-	// TODO: Z ROTATION!!!
+	if(Rotation != 0) {
+		setThrust(&FL_reg, CONSTRAIN((pThrust->FL - pThrust->Rot + Rotation), 0, 255));
+        setThrust(&FR_reg, CONSTRAIN((pThrust->FR - pThrust->Rot + Rotation), 0, 255));
+        setThrust(&BR_reg, CONSTRAIN((pThrust->BR - pThrust->Rot + Rotation), 0, 255));
+        setThrust(&BR_reg, CONSTRAIN((pThrust->BL - pThrust->Rot + Rotation), 0, 255));
+		pThrust->Rot= Rotation;
+	}
 }
 
 void CSMeasure() {
-	startCurrentMeasure(CS_ADCmask, CSMeasured);
+	startCurrentMeasure(CS_ADCmask, pCS_measured);
 }
 
 void CSFilter() {
-	if (CSMeasured->state)
+	if (pCS_measured->state)
 	{
-		CSFilterBuffer+= CSMeasured->value;
+		CSFilterBuffer+= pCS_measured->value;
 	}
 	if(!CSFilterIndex--) {
 		CSfiltered= CSFilterBuffer/CS_FILTER_COUNT;
@@ -169,7 +191,7 @@ void CSFilter() {
 	}
 }
 
-int main(void) // TODO: Make Z rotation possible
+int main(void)
 {
     prepareSystem();
     prepareTimer(0,0, PSC_0_64);
@@ -258,7 +280,6 @@ ISR(TIMER2_COMPA_vect){
         BIT_set(TIFR2, TOV2);
         ESC_port|= (1 << BL_pin)|(1 << BR_pin);
     }
-
 }
 
 ISR(TIMER2_COMPB_vect){
@@ -306,7 +327,7 @@ ISR (USART_RX_vect) {
         USART_STATE= RECEIVE_X;
     case RECEIVE_X:
         if (receiveByteCount > 0) {
-            Received->X= (Received->X << 8)|receiveChar();
+            pReceived->X= (pReceived->X << 8)|receiveChar();
             receiveByteCount--;
         }
         if (receiveByteCount == 0) {
@@ -317,7 +338,7 @@ ISR (USART_RX_vect) {
     	break;
     case RECEIVE_Y:
         if (receiveByteCount > 0) {
-            Received->Y= (Received->Y << 8)|receiveChar();
+            pReceived->Y= (pReceived->Y << 8)|receiveChar();
             receiveByteCount--;
         }
         if (receiveByteCount == 0) {
@@ -328,23 +349,21 @@ ISR (USART_RX_vect) {
     	break;
     case RECEIVE_Z:
         if (receiveByteCount > 0) {
-            Received->Z= (Received->Z << 8)|receiveChar();
+            pReceived->Z= (pReceived->Z << 8)|receiveChar();
             receiveByteCount--;
         }
         if (receiveByteCount == 0) {
             receiveByteCount= DATA_WIDTH;
-            Required->X= Received->X;
-            Required->Y= Received->Y;
-            Required->Z= Received->Z;
+            pRequired->X= pReceived->X;
+            pRequired->Y= pReceived->Y;
+            pRequired->Z= pReceived->Z;
             sendChar(ACK);
-            USART_STATE= USART_IDLE;
+            USART_STATE= RECEIVE_ROT;
         }
     	break;
 	case RECEIVE_ROT:
-
-	break;
-	case RECEIVE_RSP:
-
+		Rotation= (int8_t)receiveChar();
+		USART_STATE= USART_IDLE;
 	break;
     }
 	
@@ -356,5 +375,5 @@ ISR(WDT_vect) {
 }
 
 ISR(ADC_vect) {
-	adcGetData(CSMeasured);
+	adcGetData(pCS_measured);
 }

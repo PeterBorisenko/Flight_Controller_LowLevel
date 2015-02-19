@@ -4,6 +4,7 @@
  * Created: 4/18/2014 8:05:30 PM
  *  Author: Disgust
  */ 
+#define WITHOUT_CHECKS
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -141,7 +142,7 @@ void makeDecision() { //TODO: vector comps must be in float?
         setThrust(&FL_reg, CONSTRAIN(--pThrust->FL, 0, 255));
         setThrust(&FR_reg, CONSTRAIN(--pThrust->FR, 0, 255));
         setThrust(&BR_reg, CONSTRAIN(++pThrust->BR, 0, 255));
-        setThrust(&BR_reg, CONSTRAIN(++pThrust->BL, 0, 255));
+        setThrust(&BL_reg, CONSTRAIN(++pThrust->BL, 0, 255));
     }
     if (pNorm->Y > pRequired->Y) {
         setThrust(&FL_reg, CONSTRAIN(--pThrust->FL, 0, 255));
@@ -153,7 +154,7 @@ void makeDecision() { //TODO: vector comps must be in float?
         setThrust(&FL_reg, CONSTRAIN(++pThrust->FL, 0, 255));
         setThrust(&FR_reg, CONSTRAIN(--pThrust->FR, 0, 255));
         setThrust(&BR_reg, CONSTRAIN(--pThrust->BR, 0, 255));
-        setThrust(&BR_reg, CONSTRAIN(++pThrust->BL, 0, 255));
+        setThrust(&BL_reg, CONSTRAIN(++pThrust->BL, 0, 255));
     }
     if (pNorm->Z > pRequired->Z) {
         setThrust(&FL_reg, CONSTRAIN(--pThrust->FL, 0, 255));
@@ -165,13 +166,13 @@ void makeDecision() { //TODO: vector comps must be in float?
         setThrust(&FL_reg, CONSTRAIN(++pThrust->FL, 0, 255));
         setThrust(&FR_reg, CONSTRAIN(++pThrust->FR, 0, 255));
         setThrust(&BR_reg, CONSTRAIN(++pThrust->BR, 0, 255));
-        setThrust(&BR_reg, CONSTRAIN(++pThrust->BL, 0, 255));
+        setThrust(&BL_reg, CONSTRAIN(++pThrust->BL, 0, 255));
     }
 	if(Rotation != 0) {
-		setThrust(&FL_reg, CONSTRAIN((pThrust->FL - pThrust->Rot + Rotation), 0, 255));
-        setThrust(&FR_reg, CONSTRAIN((pThrust->FR - pThrust->Rot + Rotation), 0, 255));
-        setThrust(&BR_reg, CONSTRAIN((pThrust->BR - pThrust->Rot + Rotation), 0, 255));
-        setThrust(&BR_reg, CONSTRAIN((pThrust->BL - pThrust->Rot + Rotation), 0, 255));
+		setThrust(&FL_reg, CONSTRAIN((pThrust->FL + pThrust->Rot - Rotation), 0, 255));
+		setThrust(&FR_reg, CONSTRAIN((pThrust->FR - pThrust->Rot + Rotation), 0, 255));
+		setThrust(&BR_reg, CONSTRAIN((pThrust->BR - pThrust->Rot + Rotation), 0, 255));
+		setThrust(&BL_reg, CONSTRAIN((pThrust->BL + pThrust->Rot - Rotation), 0, 255));
 		pThrust->Rot= Rotation;
 	}
 }

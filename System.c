@@ -9,9 +9,10 @@
 
 void prepareSystem()
 {
-    WDTCSR|= (1 << WDE)|(1 << WDIE);
+    //WDTCSR|= (1 << WDE)|(1 << WDIE);
     //WDTCSR|=(0b111 << WDP0);
     setPowerReduction();
+	TWI_Init(400000, F_CPU);
     prepareAccelerometer();
 	prepareGyro();
 	prepareESC();
@@ -56,7 +57,7 @@ void prepareESC()
 
 void prepareAccelerometer() {
 	uint8_t status= ADXL345_Init();
-	if (!status) {
+	if (!status) { // TODO: do such checks in every TWI device
 		//module fault or module not exist
 	}
 	ADXL345_SetPowerMode(0x01);

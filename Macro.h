@@ -9,6 +9,7 @@
 #ifndef MACRO_H_
 #define MACRO_H_
 
+#include <stdint.h>
 ///�������///
 
 #define BIT_set(x,y) (x|=(1<<y))
@@ -30,6 +31,7 @@
 
 #define DEC_TO_ASCII(x)	(x+0x30)
 #define HEX_TO_ASCII(x)	((x<0x0F)?(DEC_TO_ASCII(x)):(x+0x37))
+
 
 // constants
 #define PI		3.14159265359

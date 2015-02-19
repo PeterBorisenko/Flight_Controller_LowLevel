@@ -120,7 +120,7 @@ void calculate()  //TODO: vector calcs must be in float
     BIT_clear(FLAGS, CALCULATING);
 }
 
-static inline void setThrust(uint8_t * ESC_reg, uint8_t thrust) {
+static inline void setThrust(volatile uint8_t * ESC_reg, uint8_t thrust) {
     *ESC_reg= thrust;
 }
 

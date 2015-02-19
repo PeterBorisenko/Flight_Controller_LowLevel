@@ -281,7 +281,7 @@ void L3G4200D_SetWaterMark(uint8_t);
 
 /****************Reading Functions*****************/
 void L3G4200D_GetSatusReg(uint8_t *);
-void L3G4200D_GetAngRateRaw(vect_t *);
+void L3G4200D_GetAngRateRaw(volatile vect_t *);
 void L3G4200D_GetFifoSourceReg(uint8_t *);
 void L3G4200D_GetInt1Src(uint8_t *);
 

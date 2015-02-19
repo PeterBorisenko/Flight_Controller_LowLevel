@@ -37,7 +37,7 @@ void TWIstart() {
      TWCR= (1 << TWINT)|(1 << TWSTA)|(1 << TWEN);    // Send START condition
      while (!BIT_read(TWCR, TWINT));                 // Waiting for START condition transmits
 #ifndef WITHOUT_CHECKS
-     if ((TWSTA & 0xF8) != START) {                  // Check for transmission status (masking TWI prescaler bits)
+     if ((TWSTA & 0xF8) != TWI_START) {                  // Check for transmission status (masking TWI prescaler bits)
          //error(TWI);
      }
 #endif
@@ -58,7 +58,7 @@ void TWIslaveWrite(uint8_t addr) {
     TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
     while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
-    if ((TWSTA & 0xF8) != MT_SLA_ACK) {
+    if ((TWSTA & 0xF8) != TWI_MT_SLA_ACK) {
         //error(TWI);
     }
 #endif
@@ -69,7 +69,7 @@ void TWIslaveRead(uint8_t addr) {
     TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
     while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
-    if ((TWSTA & 0xF8) != MR_SLA_ACK) {
+    if ((TWSTA & 0xF8) != TWI_MR_SLA_ACK) {
         //error(TWI);
     }
 #endif
@@ -80,7 +80,7 @@ void TWIbyteWrite(uint8_t dat) {
     TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
     while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
-    if ((TWSTA & 0xF8) != MT_DATA_ACK) {
+    if ((TWSTA & 0xF8) != TWI_MT_DATA_ACK) {
         //error(TWI);
     }
 #endif
@@ -91,7 +91,7 @@ uint8_t TWIbyteRead()
 	// TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
 	while (!BIT_read(TWCR, TWINT));
 
-	if ((TWSTA & 0xF8) == MR_DATA_ACK) {
+	if ((TWSTA & 0xF8) == TWI_MR_DATA_ACK) {
     	return TWDR;
 	}
 
@@ -119,7 +119,7 @@ uint8_t TWIbyteRead()
      TWCR= (1 << TWINT)|(1 << TWSTA)|(1 << TWEN);    // Send START condition
      while (!BIT_read(TWCR, TWINT));                 // Waiting for START condition transmits
 #ifndef WITHOUT_CHECKS
-     if ((TWSTA & 0xF8) != START) {                  // Check for transmission status (masking TWI prescaler bits)
+     if ((TWSTA & 0xF8) != TWI_START) {                  // Check for transmission status (masking TWI prescaler bits)
          //error(TWI);
      }
 #endif
@@ -127,7 +127,7 @@ uint8_t TWIbyteRead()
      TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
      while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
-     if ((TWSTA & 0xF8) != MT_SLA_ACK) {
+     if ((TWSTA & 0xF8) != TWI_MT_SLA_ACK) {
          //error(TWI);
      }
 #endif
@@ -136,7 +136,7 @@ uint8_t TWIbyteRead()
          TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
          while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
-         if ((TWSTA & 0xF8) != MT_DATA_ACK) {
+         if ((TWSTA & 0xF8) != TWI_MT_DATA_ACK) {
              //error(TWI);
          }
 #endif
@@ -159,7 +159,7 @@ void TWIread(uint8_t addr, uint8_t * dat, uint8_t num)
      TWCR= (1 << TWINT)|(1 << TWSTA)|(1 << TWEN);    // Send START condition
      while (!BIT_read(TWCR, TWINT));                 // Waiting for START condition transmits
 #ifndef WITHOUT_CHECKS
-     if ((TWSTA & 0xF8) != START) {                  // Check for transmission status (masking TWI prescaler bits)
+     if ((TWSTA & 0xF8) != TWI_START) {                  // Check for transmission status (masking TWI prescaler bits)
          //error(TWI);
      }
 #endif
@@ -167,14 +167,14 @@ void TWIread(uint8_t addr, uint8_t * dat, uint8_t num)
      TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
      while (!BIT_read(TWCR, TWINT));
 #ifndef WITHOUT_CHECKS
-     if ((TWSTA & 0xF8) != MR_SLA_ACK) {
+     if ((TWSTA & 0xF8) != TWI_MR_SLA_ACK) {
          //error(TWI);
      }
 #endif
      for (int i= num; i > 0; i--) {
          TWCR|= (1 << TWINT)|(1 << TWEN);                // Clear TWINT to start transmission
          while (!BIT_read(TWCR, TWINT));
-         if ((TWSTA & 0xF8) == MR_DATA_ACK) {
+         if ((TWSTA & 0xF8) == TWI_MR_DATA_ACK) {
              *dat = TWDR;
          }
 #ifndef WITHOUT_CHECKS

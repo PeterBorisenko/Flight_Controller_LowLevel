@@ -471,7 +471,7 @@ void L3G4200D_GetSatusReg(uint8_t* buff) {
 * Output         : Angular Rate Registers buffer
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 ******************************************************************************/
-void L3G4200D_GetAngRateRaw(vect_t * dat) {
+void L3G4200D_GetAngRateRaw(volatile vect_t * dat) {
   dat->X= L3G4200D_ReadReg(L3G4200D_OUT_X_L) << 8;
   dat->X|= L3G4200D_ReadReg(L3G4200D_OUT_X_H);
   

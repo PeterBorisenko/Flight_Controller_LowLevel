@@ -5,21 +5,19 @@
 #include <avr/io.h>
 #include "../Macro.h"
 
-#define WITHOUT_CHECKS 1
-
 // TWI States
-#define BUS_ERR         0x00
-#define START           0x08
-#define REPEAT_START    0x10        
-#define MT_SLA_ACK      0x18
-#define MT_SLA_NACK     0x20
-#define MT_DATA_ACK     0x28
-#define MT_DATA_NACK    0x30
-#define ARB_LOST        0x38
-#define MR_SLA_ACK      0x40
-#define MR_SLA_NACK     0x48
-#define MR_DATA_ACK     0x50
-#define MR_DATA_NACK    0x58
+#define TWI_BUS_ERR         0x00
+#define TWI_START           0x08
+#define TWI_REPEAT_START    0x10        
+#define TWI_MT_SLA_ACK      0x18
+#define TWI_MT_SLA_NACK     0x20
+#define TWI_MT_DATA_ACK     0x28
+#define TWI_MT_DATA_NACK    0x30
+#define TWI_ARB_LOST        0x38
+#define TWI_MR_SLA_ACK      0x40
+#define TWI_MR_SLA_NACK     0x48
+#define TWI_MR_DATA_ACK     0x50
+#define TWI_MR_DATA_NACK    0x58
 #define TWI_IDLE        0xF8
 
 #define TWI_READ            0x01

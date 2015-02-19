@@ -20,14 +20,14 @@
 #define MR_SLA_NACK     0x48
 #define MR_DATA_ACK     0x50
 #define MR_DATA_NACK    0x58
-#define IDLE            0xF8
+#define TWI_IDLE        0xF8
 
 #define TWI_READ            0x01
 #define TWI_WRITE           0x00
 
 // Functions
 
-unsigned char TWI_Init(unsigned long);
+uint8_t TWI_Init(uint32_t, uint32_t);
 
 void TWIslaveRead(uint8_t);
 

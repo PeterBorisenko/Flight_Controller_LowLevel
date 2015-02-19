@@ -15,21 +15,16 @@
  *                  Example: 1 - if initialization was successful;
  *                           0 - if initialization was unsuccessful.
  */
-unsigned char TWI_Init(unsigned long clockFreq)
+uint8_t TWI_Init(uint32_t twiFreq, uint32_t fcpu)
 {
-    unsigned char   status      = 1;
-    unsigned long   pbFrequency = 80000000;
-    unsigned short  brgValue    = 0;
-
-//    I2C1CON = 0;                /*!< Clear the content of I2C1CON register */
-    /*! Fsck = Fpb / ((I2CxBRG + 2) * 2) */
-    brgValue = pbFrequency / (2 * clockFreq) - 2;
-//    I2C1BRG = brgValue;
-	
+    volatile uint16_t  brValue    = 0;
+	TWCR= 0;                // Clear the content of Control register
+    // Fsck = Fpb / ((BR + 2) * 2)
+    brValue = fcpu / (2 * twiFreq) - 2;
+	TWBR= brValue;
     DDRC&= ~((1 << PINC4)|(1 << PINC5));    // Configure TWI Pins as inputs
     PORTC|= (1 << PINC4)|(1 << PINC5);      // Connect internal PULL-UPs
-	
-    return status;
+    return (TWSR >> TWS3);
 }
 
 /**

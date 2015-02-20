@@ -20,6 +20,7 @@
 #include "System.h"
 #include "Platform.h"
 #include "protocol.h"
+#include "User.h"
 
 #define wGyro           5 // wGyro is a factor of trust Gyroscope. Test it in a range: 5...20
 
@@ -35,23 +36,23 @@ typedef struct
 
 // Variables
 int8_t Rotation; // Rotation: x < 0 - CCW, x > 0 - CW, x == 0 - No rotation;
-volatile static vect_t Received;
-volatile static vect_t Required;
-volatile static vect_t A_filtered;
-volatile static vect_t G_measured;
-volatile static vect_t Norm;
-volatile static vect_t Current;
-volatile static vect_t Previous;
+volatile static vect_float_t Required;
+volatile static vect_float_t A_filtered;
+volatile static vect_float_t Norm;
 volatile static vect_t A_measured;
+volatile static vect_t G_measured;
+volatile static vect_t Current;
+volatile static vect_float_t Previous;
+
 Thrust_t Thrust;
 adc_t CS_measured;
 
 // Pointers
-volatile static vect_t * pA_filtered= &A_filtered;// Accelerometer filtered vars
+volatile static vect_float_t * pA_filtered= &A_filtered;// Accelerometer filtered vars
 volatile static vect_t * pG_measured= &G_measured;// Gyroscope measure vars
-volatile static vect_t * pNorm= &Norm;		// Full Calculation results (Gyro-compensated Accelerometer) 
+volatile static vect_float_t * pNorm= &Norm;		// Full Calculation results (Gyro-compensated Accelerometer) 
 volatile static vect_t * pCurrent= &Current;	// Full Calculation results (Gyro-compensated Accelerometer)
-volatile static vect_t * pPrevious= &Previous;	// Previous measured (calculated) vector values
+volatile static vect_float_t * pPrevious= &Previous;	// Previous measured (calculated) vector values
 volatile static vect_t * pA_measured= &A_measured;	// Accelerometer measure vars
 Thrust_t * pThrust= &Thrust;
 volatile static adc_t * pCS_measured= &CS_measured;
@@ -60,16 +61,6 @@ volatile static adc_t * pCS_measured= &CS_measured;
 volatile static uint16_t CSfiltered; // Needed to prevent false reaction and improve noise immunity
 uint32_t CSFilterBuffer;
 uint8_t	CSFilterIndex= CS_FILTER_COUNT;
-
-
-int16_t filtr(int16_t curr_val, int16_t prev_val, uint8_t mod) {
-	return ((curr_val + prev_val * mod)/(1 + mod));
-}
-
-int16_t hypo3(int16_t a, int16_t b, int16_t c )
-{
-	return sqrt(a*a + b*b + c*c);
-}
 
 void readGyro() {
 	L3G4200D_GetAngRateRaw(pG_measured);
@@ -83,7 +74,7 @@ void measure() {
         while(BIT_read(FLAGS, CALCULATING));
         BIT_clear(FLAGS, IMU_DATA_READY);
         // Prepare Recent Cycle Data
-        pPrevious->X= pA_filtered->X;
+        pPrevious->X= pA_filtered->X; // TODO: Replace wth memcpy()
         pPrevious->Y= pA_filtered->Y;
         pPrevious->Z= pA_filtered->Z;
 
@@ -95,11 +86,11 @@ void measure() {
         BIT_set(FLAGS, IMU_DATA_READY);
 }
 
-void calculate()  //TODO: vector calcs must be in float
+void calculate()
 {
     while(!BIT_read(FLAGS, IMU_DATA_READY));
     BIT_set(FLAGS, CALCULATING);
-    int16_t scalar= hypo3(pA_filtered->X, pA_filtered->Y, pA_filtered->Z); 
+    float scalar= hypo3(pA_filtered->X, pA_filtered->Y, pA_filtered->Z);
     pNorm->X= pA_filtered->X/scalar;
     pNorm->Y= pA_filtered->Y/scalar;
     pNorm->Z= pA_filtered->Z/scalar;
@@ -187,10 +178,7 @@ void error( uint8_t affectedModule )
 int main(void)
 {
 	pRotation= &Rotation;
-	pReceived= &Received;	// Vector instructions from control system
 	pRequired= &Required;	// Stored vector instructions
-	uint16_t a= sizeof(pReceived);
-	uint16_t b= sizeof(pReceived);
     prepareSystem();
     prepareTimer(0,0, PSC_0_64);
     prepareTimer(2,0, PSC_2_64);

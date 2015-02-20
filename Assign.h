@@ -12,30 +12,7 @@
 #include <avr/io.h>
 
 #define F_CPU 16000000UL
-#define BAUD 1200
 
-// USART States
-#define USART_IDLE  0x00
-#define USART_REQ   0x01
-#define HEADER_OK   0x02
-#define RECEIVE_X   0x03
-#define RECEIVE_Y   0x04
-#define RECEIVE_Z   0x05
-#define RECEIVE_ROT	0x06
-#define RECEIVE_RSP	0x07
-#define USART_ASKED	0x10
-#define USART_ASKS	0x11
-#define SEND_STAT	0x12
-
-// Message parts
-#define HEADER      0x1010
-#define ACK         0x20
-#define NACK        0x21
-#define ARMED		0x30
-#define FAULT		0x31
-#define ASK_STATUS	0x32
-#define SET_ONGO	0x40
-#define UNSET_ONGO	0x44
 
 // Data format
 typedef struct {
@@ -49,7 +26,6 @@ typedef struct {
 	float Y;
 	float Z;
 } vect_float_t;
-#define DATA_WIDTH 2
 
 // Timer Prescaler
 #define TMR_OFF         0b000
@@ -88,5 +64,11 @@ typedef struct {
 #define CS_DID			ADC0D
 #define CS_FILTER_COUNT	0x05;
 
+// General
+volatile static uint8_t FLAGS= 0x00;
+//Flag bits
+#define IMU_DATA_READY  0
+#define CALCULATING     1
+//#define ON_GO			2
 
 #endif /* ASSIGN_H_ */

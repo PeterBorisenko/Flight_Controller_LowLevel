@@ -17,23 +17,11 @@
 
 #include "Macro.h"
 #include "Assign.h"
-#include "ADC_mega328.h"
 #include "System.h"
-
-volatile uint8_t receiveByteCount= DATA_WIDTH;
+#include "Platform.h"
+#include "protocol.h"
 
 #define wGyro           5 // wGyro is a factor of trust Gyroscope. Test it in a range: 5...20
-
-volatile static uint8_t FLAGS= 0x00;
-
-#define IMU_DATA_READY  0
-#define CALCULATING     1
-#define ON_GO			2
-
-volatile static uint8_t USART_STATE= USART_IDLE;
-
-volatile static uint8_t DEVICE_STATUS;
-volatile static uint8_t ERROR_CODE;
 
 typedef struct
 {
@@ -46,7 +34,7 @@ typedef struct
 } Thrust_t;
 
 // Variables
-volatile static int8_t Rotation; // Rotation: x < 0 - CCW, x > 0 - CW, x == 0 - No rotation;
+int8_t Rotation; // Rotation: x < 0 - CCW, x > 0 - CW, x == 0 - No rotation;
 volatile static vect_t Received;
 volatile static vect_t Required;
 volatile static vect_t A_filtered;
@@ -59,8 +47,6 @@ Thrust_t Thrust;
 adc_t CS_measured;
 
 // Pointers
-volatile static vect_t * pReceived= &Received;	// Vector instructions from control system
-volatile static vect_t * pRequired= &Required;	// Stored vector instructions
 volatile static vect_t * pA_filtered= &A_filtered;// Accelerometer filtered vars
 volatile static vect_t * pG_measured= &G_measured;// Gyroscope measure vars
 volatile static vect_t * pNorm= &Norm;		// Full Calculation results (Gyro-compensated Accelerometer) 
@@ -70,6 +56,7 @@ volatile static vect_t * pA_measured= &A_measured;	// Accelerometer measure vars
 Thrust_t * pThrust= &Thrust;
 volatile static adc_t * pCS_measured= &CS_measured;
 
+// Data filter
 volatile static uint16_t CSfiltered; // Needed to prevent false reaction and improve noise immunity
 uint32_t CSFilterBuffer;
 uint8_t	CSFilterIndex= CS_FILTER_COUNT;
@@ -82,11 +69,6 @@ int16_t filtr(int16_t curr_val, int16_t prev_val, uint8_t mod) {
 int16_t hypo3(int16_t a, int16_t b, int16_t c )
 {
 	return sqrt(a*a + b*b + c*c);
-}
-
-void error( uint8_t affectedModule )
-{
-    //TODO: Error processing
 }
 
 void readGyro() {
@@ -173,11 +155,11 @@ void makeDecision() { //TODO: vector comps must be in float?
         setThrust(&BL_reg, CONSTRAIN(++pThrust->BL, 0, 255));
     }
 	if(Rotation != 0) {
-		setThrust(&FL_reg, CONSTRAIN((pThrust->FL + pThrust->Rot - Rotation), 0, 255));
-		setThrust(&FR_reg, CONSTRAIN((pThrust->FR - pThrust->Rot + Rotation), 0, 255));
-		setThrust(&BR_reg, CONSTRAIN((pThrust->BR - pThrust->Rot + Rotation), 0, 255));
-		setThrust(&BL_reg, CONSTRAIN((pThrust->BL + pThrust->Rot - Rotation), 0, 255));
-		pThrust->Rot= Rotation;
+		setThrust(&FL_reg, CONSTRAIN((pThrust->FL + pThrust->Rot - *pRotation), 0, 255));
+		setThrust(&FR_reg, CONSTRAIN((pThrust->FR - pThrust->Rot + *pRotation), 0, 255));
+		setThrust(&BR_reg, CONSTRAIN((pThrust->BR - pThrust->Rot + *pRotation), 0, 255));
+		setThrust(&BL_reg, CONSTRAIN((pThrust->BL + pThrust->Rot - *pRotation), 0, 255));
+		pThrust->Rot= *pRotation;
 	}
 }
 
@@ -196,8 +178,19 @@ void CSFilter() {
 	}
 }
 
+void error( uint8_t affectedModule )
+{
+	ERROR_CODE|= affectedModule;
+	DEVICE_STATUS= FAULT;
+}
+
 int main(void)
 {
+	pRotation= &Rotation;
+	pReceived= &Received;	// Vector instructions from control system
+	pRequired= &Required;	// Stored vector instructions
+	uint16_t a= sizeof(pReceived);
+	uint16_t b= sizeof(pReceived);
     prepareSystem();
     prepareTimer(0,0, PSC_0_64);
     prepareTimer(2,0, PSC_2_64);
@@ -207,14 +200,16 @@ int main(void)
 
     while(1)
     {
-		if (BIT_read(FLAGS, ON_GO))
+		switch (DEVICE_STATUS)
 		{
-			asm("wdr");
-			measure();
-			asm("wdr");
-			calculate();
-			asm("wdr");
-			makeDecision();
+			case ON_GO:
+				asm("wdr");
+				measure();
+				asm("wdr");
+				calculate();
+				asm("wdr");
+				makeDecision();
+			break;
 		} 
     }
 }
@@ -311,85 +306,7 @@ ISR(TIMER1_OVF_vect){ // System TIMER
 
 // USART Message Protocol
 ISR (USART_RX_vect) {
-	uint8_t res;
-    switch (USART_STATE)
-    {
-    case USART_IDLE:
-        if (((HEADER >> 8)&0xFF) == res)
-        {
-            USART_STATE= USART_REQ;
-        }
-        else {
-            sendChar(NACK);
-        }
-    	break;
-    case USART_REQ:
-        if ((unsigned char)HEADER == res)
-        {
-            USART_STATE= HEADER_OK;
-        }
-        else {
-            sendChar(NACK);
-        }
-    	break;
-    case HEADER_OK:
-		if (res == ASK_STATUS)
-		{
-			sendChar(DEVICE_STATUS);
-			break;
-		}
-		else if (res == SET_ONGO) {
-			BIT_set(FLAGS, ON_GO);
-			break;
-		}
-		else if (res == UNSET_ONGO) {
-			BIT_clear(FLAGS, ON_GO);
-			break;
-		}
-        USART_STATE= RECEIVE_X;
-    case RECEIVE_X:
-        if (receiveByteCount > 0) {
-            pReceived->X= (pReceived->X << 8)|res;
-            receiveByteCount--;
-        }
-        if (receiveByteCount == 0) {
-            receiveByteCount= DATA_WIDTH;
-			sendChar(ACK);
-            USART_STATE= RECEIVE_Y;
-        }
-    	break;
-    case RECEIVE_Y:
-        if (receiveByteCount > 0) {
-            pReceived->Y= (pReceived->Y << 8)|res;
-            receiveByteCount--;
-        }
-        if (receiveByteCount == 0) {
-            receiveByteCount= DATA_WIDTH;
-			sendChar(ACK);
-            USART_STATE= RECEIVE_Z;
-        }
-    	break;
-    case RECEIVE_Z:
-        if (receiveByteCount > 0) {
-            pReceived->Z= (pReceived->Z << 8)|res;
-            receiveByteCount--;
-        }
-        if (receiveByteCount == 0) {
-            receiveByteCount= DATA_WIDTH;
-            pRequired->X= pReceived->X;
-            pRequired->Y= pReceived->Y;
-            pRequired->Z= pReceived->Z;
-            sendChar(ACK);
-            USART_STATE= RECEIVE_ROT;
-        }
-    	break;
-	case RECEIVE_ROT:
-		Rotation= (int8_t)res;
-		USART_STATE= USART_IDLE;
-	break;
-    }
-	
-	
+	protoRxHandler();
 }
 
 ISR(WDT_vect) {

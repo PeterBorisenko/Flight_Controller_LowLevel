@@ -34,5 +34,6 @@
 	void adcStartAndSleep(adc_t *);
 	void adcGetDataAndWakeUp(adc_t *);
 	void adcDigInDisable(uint8_t);
+	uint8_t adcRead();
 
 #endif

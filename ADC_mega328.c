@@ -67,3 +67,8 @@ void adcGetData(volatile adc_t * result)
 	}
 	result->state= 1;
 }
+
+uint8_t adcRead()
+{
+	return ADC;
+}

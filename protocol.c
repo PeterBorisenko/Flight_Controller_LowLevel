@@ -2,7 +2,11 @@
 
 volatile uint8_t receivedByteCount= DATA_WIDTH;
 
-void protoRxHandler()
+
+ResInstruction_t dataReceived;
+uint8_t dataReceivedCount;
+
+void protoRxHandler() // TODO: Change it to switch/case model like in High-level controller
 {
 	uint8_t res= receiveChar();
 	switch (USART_STATE)
@@ -42,7 +46,8 @@ void protoRxHandler()
 		USART_STATE= RECEIVE_X;
 		case RECEIVE_X:
 		if (receivedByteCount > 0) {
-			pReceived->X= (pReceived->X << 8)|res;
+			dataReceived.byteReceived[dataReceivedCount]= res;
+			dataReceivedCount++;
 			receivedByteCount--;
 		}
 		if (receivedByteCount == 0) {
@@ -53,7 +58,8 @@ void protoRxHandler()
 		break;
 		case RECEIVE_Y:
 		if (receivedByteCount > 0) {
-			pReceived->Y= (pReceived->Y << 8)|res;
+			dataReceived.byteReceived[dataReceivedCount]= res;
+			dataReceivedCount++;
 			receivedByteCount--;
 		}
 		if (receivedByteCount == 0) {
@@ -64,15 +70,16 @@ void protoRxHandler()
 		break;
 		case RECEIVE_Z:
 		if (receivedByteCount > 0) {
-			pReceived->Z= (pReceived->Z << 8)|res;
+			dataReceived.byteReceived[dataReceivedCount]= res;
+			dataReceivedCount++;
 			receivedByteCount--;
 		}
 		if (receivedByteCount == 0) {
+			dataReceivedCount= 0;
 			receivedByteCount= DATA_WIDTH;
-			memcpy(pRequired, pReceived, 0);
-			pRequired->X= pReceived->X;
-			pRequired->Y= pReceived->Y;
-			pRequired->Z= pReceived->Z;
+			pRequired->X= dataReceived.XYZ.X;
+			pRequired->Y= dataReceived.XYZ.Y;
+			pRequired->Z= dataReceived.XYZ.Z;
 			sendChar(ACK);
 			USART_STATE= RECEIVE_ROT;
 		}

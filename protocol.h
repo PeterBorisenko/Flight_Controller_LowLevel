@@ -16,7 +16,7 @@
 #include "Assign.h"
 
 #define BAUD 1200
-#define DATA_WIDTH 2
+#define DATA_WIDTH 4 // bytes, because we sending float
 
 // USART States
 #define USART_IDLE  0x00
@@ -51,13 +51,18 @@
 
 // Globals
 //
+#define XYZDataLength 12
+
+typedef union {
+	vect_float_t XYZ;
+	uint8_t byteReceived[XYZDataLength];
+} ResInstruction_t;
+
 volatile static uint8_t USART_STATE= USART_IDLE;
 volatile static uint8_t DEVICE_STATUS= WAIT;
 volatile static uint8_t ERROR_CODE;
 
-
-volatile static vect_t * pReceived;	// Vector instructions from control system
-volatile static vect_t * pRequired;	// Stored vector instructions
+volatile static vect_float_t * pRequired;	// Stored vector instructions
 volatile static int8_t * pRotation;
 
 // Methods

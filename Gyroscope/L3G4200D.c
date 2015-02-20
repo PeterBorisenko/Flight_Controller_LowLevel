@@ -162,7 +162,7 @@ void L3G4200D_SetFullScale(L3G4200D_Fullscale_t fs) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 ******************************************************************************/
-void L3G4200D_SetBDU(State_t bdu) {
+void L3G4200D_SetBDU(memsState_t bdu) {
 
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG4);
   value &= 0x7F;
@@ -198,7 +198,7 @@ void L3G4200D_SetBLE(L3G4200D_Endianess_t ble) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 ******************************************************************************/
-void L3G4200D_HPFEnable(State_t hpf) {
+void L3G4200D_HPFEnable(memsState_t hpf) {
 
   uint8_t value= L3G4200D_ReadReg(L3G4200D_CTRL_REG5);        
   value &= 0xEF;
@@ -310,7 +310,7 @@ void L3G4200D_SetInt2Pin(uint8_t pinConf) {
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 * Original		 : (C) COPYRIGHT 2011 STMicroelectronics
 ******************************************************************************/
-void L3G4200D_Int1LatchEnable(State_t latch) {
+void L3G4200D_Int1LatchEnable(memsState_t latch) {
   uint8_t value= L3G4200D_ReadReg(L3G4200D_INT1_CFG);          
   value &= 0xBF;
   value |= latch<<L3G4200D_LIR;

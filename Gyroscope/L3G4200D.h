@@ -25,7 +25,7 @@ typedef enum {
 typedef enum {
   MEMS_ENABLE				=		0x01,
   MEMS_DISABLE				=		0x00	
-} State_t;
+} memsState_t;
 
 #endif /*__SHARED__TYPES*/
 
@@ -254,14 +254,14 @@ void L3G4200D_SetODR(L3G4200D_ODR_t);
 void L3G4200D_SetMode(L3G4200D_Mode_t);
 void L3G4200D_SetAxis(uint8_t);
 void L3G4200D_SetFullScale(L3G4200D_Fullscale_t);
-void L3G4200D_SetBDU(State_t);
+void L3G4200D_SetBDU(memsState_t);
 void L3G4200D_SetBLE(L3G4200D_Endianess_t);
 void L3G4200D_SetSPIInterface(L3G4200D_SPIMode_t);
 
 /***************Filtering Functions****************/
 void L3G4200D_SetHPFMode(L3G4200D_HPFMode_t);
 void L3G4200D_SetHPFCutOFF(L3G4200D_HPFCutOffFreq_t);
-void L3G4200D_HPFEnable(State_t);
+void L3G4200D_HPFEnable(memsState_t);
 void L3G4200D_SetOutputDataAndFifoFilters(L3G4200D_HPF_LPF2_Enable);
 void L3G4200D_SetInt1Filters(L3G4200D_HPF_LPF2_Enable);
 
@@ -269,7 +269,7 @@ void L3G4200D_SetInt1Filters(L3G4200D_HPF_LPF2_Enable);
 void L3G4200D_SetIntPinMode(L3G4200D_IntPinMode_t);
 void L3G4200D_SetInt1Pin(uint8_t);
 void L3G4200D_SetInt2Pin(uint8_t);
-void L3G4200D_Int1LatchEnable(State_t);
+void L3G4200D_Int1LatchEnable(memsState_t);
 void L3G4200D_ResetInt1Latch(void);
 void L3G4200D_SetIntConfiguration(uint8_t);
 void L3G4200D_SetInt1Threshold(L3G4200D_IntThsAxis, uint16_t);

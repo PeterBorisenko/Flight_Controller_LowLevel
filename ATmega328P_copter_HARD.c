@@ -28,8 +28,12 @@ volatile static uint8_t FLAGS= 0x00;
 
 #define IMU_DATA_READY  0
 #define CALCULATING     1
+#define ON_GO			2
 
 volatile static uint8_t USART_STATE= USART_IDLE;
+
+volatile static uint8_t DEVICE_STATUS;
+volatile static uint8_t ERROR_CODE;
 
 typedef struct
 {
@@ -203,12 +207,15 @@ int main(void)
 
     while(1)
     {
-        asm("wdr");
-        measure();
-        asm("wdr");
-        calculate();
-        asm("wdr");
-        makeDecision();
+		if (BIT_read(FLAGS, ON_GO))
+		{
+			asm("wdr");
+			measure();
+			asm("wdr");
+			calculate();
+			asm("wdr");
+			makeDecision();
+		} 
     }
 }
 
@@ -304,10 +311,11 @@ ISR(TIMER1_OVF_vect){ // System TIMER
 
 // USART Message Protocol
 ISR (USART_RX_vect) {
+	uint8_t res;
     switch (USART_STATE)
     {
     case USART_IDLE:
-        if (((HEADER >> 8)&0xFF) == receiveChar())
+        if (((HEADER >> 8)&0xFF) == res)
         {
             USART_STATE= USART_REQ;
         }
@@ -316,7 +324,7 @@ ISR (USART_RX_vect) {
         }
     	break;
     case USART_REQ:
-        if ((unsigned char)HEADER == receiveChar())
+        if ((unsigned char)HEADER == res)
         {
             USART_STATE= HEADER_OK;
         }
@@ -325,10 +333,23 @@ ISR (USART_RX_vect) {
         }
     	break;
     case HEADER_OK:
+		if (res == ASK_STATUS)
+		{
+			sendChar(DEVICE_STATUS);
+			break;
+		}
+		else if (res == SET_ONGO) {
+			BIT_set(FLAGS, ON_GO);
+			break;
+		}
+		else if (res == UNSET_ONGO) {
+			BIT_clear(FLAGS, ON_GO);
+			break;
+		}
         USART_STATE= RECEIVE_X;
     case RECEIVE_X:
         if (receiveByteCount > 0) {
-            pReceived->X= (pReceived->X << 8)|receiveChar();
+            pReceived->X= (pReceived->X << 8)|res;
             receiveByteCount--;
         }
         if (receiveByteCount == 0) {
@@ -339,7 +360,7 @@ ISR (USART_RX_vect) {
     	break;
     case RECEIVE_Y:
         if (receiveByteCount > 0) {
-            pReceived->Y= (pReceived->Y << 8)|receiveChar();
+            pReceived->Y= (pReceived->Y << 8)|res;
             receiveByteCount--;
         }
         if (receiveByteCount == 0) {
@@ -350,7 +371,7 @@ ISR (USART_RX_vect) {
     	break;
     case RECEIVE_Z:
         if (receiveByteCount > 0) {
-            pReceived->Z= (pReceived->Z << 8)|receiveChar();
+            pReceived->Z= (pReceived->Z << 8)|res;
             receiveByteCount--;
         }
         if (receiveByteCount == 0) {
@@ -363,7 +384,7 @@ ISR (USART_RX_vect) {
         }
     	break;
 	case RECEIVE_ROT:
-		Rotation= (int8_t)receiveChar();
+		Rotation= (int8_t)res;
 		USART_STATE= USART_IDLE;
 	break;
     }

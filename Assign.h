@@ -34,6 +34,8 @@
 #define ARMED		0x30
 #define FAULT		0x31
 #define ASK_STATUS	0x32
+#define SET_ONGO	0x40
+#define UNSET_ONGO	0x44
 
 // Data format
 typedef struct {
